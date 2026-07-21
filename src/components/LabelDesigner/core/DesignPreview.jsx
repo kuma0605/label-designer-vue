@@ -1,22 +1,33 @@
 import { defineComponent } from 'vue';
 import { checkLine } from '@/utils';
+import PreviewText from './PreviewText.vue';
+import PreviewBarcode from './PreviewBarcode.vue';
+import PreviewQrcode from './PreviewQrcode.vue';
 
 export default defineComponent({
   name: 'DesignPreview',
+  components: {
+    PreviewText,
+    PreviewBarcode,
+    PreviewQrcode
+  },
   props: {
     template: {
       type: Object,
       required: true
+    },
+    // 真实数据，用于替换模板中的 ${key} 占位符
+    // 格式: { asset_num: 'ZC-001', asset_name: '联想笔记本', ... }
+    variables: {
+      type: Object,
+      default: () => ({})
     }
   },
   setup(props) {
-    const getFields = (component) => {
-      return component.variable?.enable
-        ? component.variable.textData
-            .filter((item) => item.key)
-            .map((item) => item.key)
-            .join('')
-        : null;
+    const formatFontSize = (fontSize) => {
+      if (!fontSize) return '14px';
+      const str = String(fontSize);
+      return str.includes('px') ? str : `${str}px`;
     };
 
     const getSelfStyle = (component) => {
@@ -58,10 +69,10 @@ export default defineComponent({
           style.borderLeft = `${width}px ${lineType} #000`;
         }
       } else if (isBarcode) {
-        style.fontSize = fontSize ? (fontSize.includes('px') ? fontSize : fontSize + 'px') : '14px';
+        style.fontSize = formatFontSize(fontSize);
       } else if (isText) {
         style.textAlign = align;
-        style.fontSize = fontSize ? (fontSize.includes('px') ? fontSize : fontSize + 'px') : '14px';
+        style.fontSize = formatFontSize(fontSize);
         style.lineHeight = lineHeight || '1.5';
         style.border = hasBorder ? '1px solid #000' : '1px solid transparent';
         style.fontWeight = isBold ? 'bold' : 'normal';
@@ -72,162 +83,80 @@ export default defineComponent({
     };
 
     const getContainerStyle = (component) => {
-      const { props: cProps = {}, position, rect, type } = component;
+      const { props: cProps = {}, position, rect, default: defaultRect, type } = component;
       const { fontSize, fontFamily, lineHeight, align, isBold } = cProps;
       const fontWeight = isBold ? 'bold' : 'normal';
       const isLine = checkLine(type);
+      // 优先用 rect（编辑态实时计算），否则 fallback 到 default（模板存储的尺寸）
+      const width = rect?.width ?? defaultRect?.width ?? 100;
+      const height = rect?.height ?? defaultRect?.height ?? 30;
+
+      const topVal = position?.clientY ?? defaultRect?.y ?? 0;
+      const leftVal = position?.clientX ?? defaultRect?.x ?? 0;
 
       return {
-        fontSize: fontSize ? (fontSize.includes('px') ? fontSize : fontSize + 'px') : '14px',
+        fontSize: formatFontSize(fontSize),
         fontFamily,
         lineHeight: lineHeight || '1.5',
         textAlign: align,
-        top: position.clientY + 'px',
-        left: position.clientX + 'px',
+        top: topVal + 'px',
+        left: leftVal + 'px',
         fontWeight,
-        width: rect.width + 'px',
-        height: rect.height + 'px',
+        width: width + 'px',
+        height: height + 'px',
         padding: isLine ? '0' : '0 10px 0 0',
         position: 'absolute',
         boxSizing: 'border-box'
       };
     };
 
-    const renderText = (component) => {
-      let result = '';
-      const { variable } = component;
-      if (variable && variable.enable) {
-        component.variable.textData.forEach((item) => {
-          result += `<span class="${item.key}">${item.value || ''}</span>`;
-        });
-      } else {
-        result = component.props.text || component.props.data || '';
-      }
-      return result;
-    };
-
-    const renderBarcode = (component) => {
-      const fields = getFields(component);
-      const style = getSelfStyle(component);
-
-      return (
-        <div
-          class="barcode-wrap"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            width: '100%',
-            height: '100%'
-          }}
-        >
-          <img
-            class={['barcode', component.id, component.type]}
-            style={{ ...style, width: '100%', height: 'auto' }}
-            alt="barcode"
-            draggable="false"
-          />
-          {component.props.displayValue === '1' && (
-            <p
-              class="barcode-text"
-              style={style}
-              data-fields={fields}
-              v-html={renderText(component)}
-            />
-          )}
-        </div>
-      );
-    };
-
-    const renderQrcode = (component) => {
-      return (
-        <div class="qr-code-wrap" style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <img
-            class={['qr-code', component.id]}
-            style={{
-              maxWidth: '100%',
-              maxHeight: '100%',
-              verticalAlign: 'middle',
-              userSelect: 'none'
-            }}
-            alt="qrcode"
-            draggable="false"
-            data-fields={getFields(component)}
-          />
-        </div>
-      );
-    };
-
-    const renderHorizontalLine = (component) => {
-      return (
-        <div
-          class="x-line-wrap"
-          style={getSelfStyle(component)}
-        />
-      );
-    };
-
-    const renderVerticalLine = (component) => {
-      return (
-        <div
-          class="y-line-wrap"
-          style={getSelfStyle(component)}
-        />
-      );
-    };
-
-    const renderRectangle = (component) => {
-      return (
-        <div
-          class="rectangle-wrap"
-          style={{ ...getSelfStyle(component), width: '100%', height: '100%' }}
-        />
-      );
-    };
-
-    const generateWidget = (component) => {
-      const isLine = checkLine(component.type);
-
-      const renderContent = () => {
-        switch (component.name) {
-          case 'barCode':
-            return renderBarcode(component);
-          case 'qrCode':
-            return renderQrcode(component);
-          case 'xLine':
-            return renderHorizontalLine(component);
-          case 'yLine':
-            return renderVerticalLine(component);
-          case 'rectangle':
-            return renderRectangle(component);
-          default:
-            // Custom Text
-            return (
-              <div
-                class="detail"
-                style={{ ...getSelfStyle(component), width: '100%', height: '100%' }}
-                data-fields={getFields(component)}
-              >
-                <span
-                  class={[component.id, component.type]}
-                  v-html={renderText(component)}
-                />
-              </div>
-            );
-        }
+    const renderContent = (component) => {
+      const selfStyle = getSelfStyle(component);
+      const sharedProps = {
+        component: component,
+        variables: props.variables
       };
 
-      return (
-        <div
-          id={component.id}
-          key={component.id}
-          class="component"
-          style={getContainerStyle(component)}
-        >
-          {renderContent()}
-        </div>
-      );
+      switch (component.name) {
+        case 'barCode':
+          return (
+            <div
+              class="barcode-wrap"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                width: '100%',
+                height: '100%'
+              }}
+            >
+              <PreviewBarcode {...sharedProps} />
+            </div>
+          );
+        case 'qrCode':
+          return (
+            <div class="qr-code-wrap" style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <PreviewQrcode {...sharedProps} />
+            </div>
+          );
+        case 'xLine':
+          return <div class="x-line-wrap" style={selfStyle} />;
+        case 'yLine':
+          return <div class="y-line-wrap" style={selfStyle} />;
+        case 'rectangle':
+          return <div class="rectangle-wrap" style={{ ...selfStyle, width: '100%', height: '100%' }} />;
+        default:
+          // Custom Text
+          return (
+            <div
+              class="detail"
+              style={{ ...selfStyle, width: '100%', height: '100%' }}
+            >
+              <PreviewText {...sharedProps} />
+            </div>
+          );
+      }
     };
 
     return () => {
@@ -242,7 +171,16 @@ export default defineComponent({
             backgroundColor: '#ffffff'
           }}
         >
-          {data.map((component) => generateWidget(component))}
+          {data.map((component) => (
+            <div
+              key={component.id}
+              id={component.id}
+              class="component"
+              style={getContainerStyle(component)}
+            >
+              {renderContent(component)}
+            </div>
+          ))}
         </div>
       );
     };
