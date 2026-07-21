@@ -156,17 +156,11 @@ const handleCancelCurrent = (e) => {
 };
 
 onMounted(() => {
-  actions.clearStoreList();
-  if (props.modelValue?.data) {
-    actions.updateStoreList(props.modelValue.data);
-  }
-  if (props.modelValue?.width && props.modelValue?.height) {
-    actions.setPageSize(props.modelValue.width, props.modelValue.height);
-  }
   on(document, 'click', handleCancelCurrent);
 });
 
 onUnmounted(() => {
+  actions.clearStoreList();
   off(document, 'click', handleCancelCurrent);
 });
 </script>

@@ -72,6 +72,22 @@ watch(
 );
 
 watch(
+  () => [state.page.width, state.page.height],
+  ([newWidth, newHeight]) => {
+    if (newWidth && newHeight) {
+      formPage.value.width = newWidth / 10;
+      formPage.value.height = newHeight / 10;
+      
+      const matchingOption = pageSizeOptions.find(
+        opt => opt.size[0] === newWidth && opt.size[1] === newHeight
+      );
+      formPage.value.pageName = matchingOption ? matchingOption.value : 'custom';
+    }
+  },
+  { immediate: true }
+);
+
+watch(
   () => currentComponent.value?.props?.data,
   () => {
     if (currentComponent.value?.type === 'BarcodeUi' || currentComponent.value?.type === 'QrCodeUi') {
