@@ -211,6 +211,18 @@ const handleClose = () => {
   activeTemplate.value = null;
 };
 
+const getMiniLabelStyle = (width, height) => {
+  const maxW = 180;
+  const maxH = 110;
+  const scale = Math.min(maxW / width, maxH / height);
+  const w = Math.round(width * scale);
+  const h = Math.round(height * scale);
+  return {
+    width: `${w}px`,
+    height: `${h}px`
+  };
+};
+
 onMounted(() => {
   loadTemplates();
 });
@@ -239,7 +251,7 @@ onMounted(() => {
           @click="handleEdit(item)"
         >
           <div class="card-preview">
-            <div class="mini-label-box" :style="{ width: `${item.width / 2.5}px`, height: `${item.height / 2.5}px` }">
+            <div class="mini-label-box" :style="getMiniLabelStyle(item.width, item.height)">
               <span class="preview-text">尺寸: {{ item.width / 10 }} x {{ item.height / 10 }} mm</span>
               <span class="preview-count">包含物料: {{ item.data?.length || 0 }} 个</span>
             </div>
@@ -353,6 +365,7 @@ onMounted(() => {
         align-items: center;
         justify-content: center;
         border-bottom: 1px solid #eee;
+        overflow: hidden;
         
         .mini-label-box {
           background-color: white;
