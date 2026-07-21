@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, watch, computed } from 'vue';
+import { onMounted, watch, computed, ref } from 'vue';
 import barcode from 'jsbarcode';
 import VarText from './VarText.vue';
 
@@ -36,6 +36,8 @@ const props = defineProps({
 
 const emit = defineEmits(['complete']);
 
+const img = ref(null);
+
 const getStyle = computed(() => {
   const size = props.fontSize ? (String(props.fontSize).includes('px') ? props.fontSize : props.fontSize + 'px') : '14px';
   return {
@@ -47,10 +49,10 @@ const getStyle = computed(() => {
 });
 
 const renderBarcode = () => {
-  const { elementId, bodyHeight, lineWidth, format, data } = props;
-  if (!elementId || !data) return;
+  const { bodyHeight, lineWidth, format, data } = props;
+  if (!img.value || !data) return;
   try {
-    barcode(`.${elementId}`, data, {
+    barcode(img.value, data, {
       format,
       width: lineWidth,
       height: bodyHeight,

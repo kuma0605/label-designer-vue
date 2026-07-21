@@ -192,7 +192,10 @@ export const actions = {
     const active = state.storeList.find((item) => item.id === state.activeComponent?.id);
     if (active) {
       const { getStringVars } = import.meta.glob('@/utils/index.js', { eager: true })['/src/utils/index.js'] || {};
-      const value = getStringVars ? getStringVars(active.props.text || active.props.data) : [];
+      const value = getStringVars ? getStringVars(active.props.text || active.props.data || '') : [];
+      if (!active.variable) {
+        active.variable = { enable: false, textData: [] };
+      }
       active.variable.textData = value;
       active.variable.enable = value.some((item) => item.key);
     }

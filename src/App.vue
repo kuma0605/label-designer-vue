@@ -141,7 +141,14 @@ const loadTemplates = () => {
   const local = localStorage.getItem('label_templates_v3');
   if (local) {
     try {
-      templatesList.value = JSON.parse(local);
+      const list = JSON.parse(local);
+      // 防御性修复：确保加载出来的每个模板都有唯一的 id，防止历史测试中的脏数据导致 id 为 undefined 产生冲突
+      templatesList.value = list.map(item => {
+        if (!item.id) {
+          item.id = `tpl-${Math.random().toString(36).substring(2, 10)}`;
+        }
+        return item;
+      });
     } catch (e) {
       templatesList.value = [...defaultTemplates];
     }

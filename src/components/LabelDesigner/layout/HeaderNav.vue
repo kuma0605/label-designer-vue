@@ -3,6 +3,15 @@ import { actions, state } from '../store/designerState.js';
 import html2canvas from 'html2canvas';
 import { DialogPlugin, MessagePlugin } from 'tdesign-vue-next';
 
+const props = defineProps({
+  modelValue: {
+    type: Object,
+    default() {
+      return {};
+    }
+  }
+});
+
 const emit = defineEmits(['save', 'print']);
 
 const handleClearCanvas = () => {
@@ -19,7 +28,8 @@ const handleClearCanvas = () => {
 
 const handleSave = () => {
   const template = {
-    name: '标签模板',
+    id: props.modelValue?.id,
+    name: props.modelValue?.name || '标签模板',
     width: state.page.width,
     height: state.page.height,
     data: JSON.parse(JSON.stringify(state.storeList))

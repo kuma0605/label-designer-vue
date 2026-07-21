@@ -423,8 +423,8 @@ defineExpose({
     class="drag-warp"
     :class="activeClass"
     :style="dragStyle"
-    @click.stop="handleSetCurrent"
-    @mousedown.stop="handleMouseDown"
+    @mousedown.stop="handleSetCurrent(); handleMouseDown($event)"
+    @click.stop="handleSetCurrent()"
     @contextmenu="handleContextMenu"
   >
     <component
