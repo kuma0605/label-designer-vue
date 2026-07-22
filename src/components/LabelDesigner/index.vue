@@ -6,6 +6,9 @@ import RightMenu from './layout/RightMenu.vue';
 import Board from './layout/Board.vue';
 import { state, actions } from './store/designerState.js';
 import { on, off } from '@/utils/dom.js';
+import { printLabelJobs } from '@/utils/printService.js';
+import { SAMPLE_PRINT_VARIABLES } from '@/utils/templateStore.js';
+import { MessagePlugin } from 'tdesign-vue-next';
 
 const props = defineProps({
   modelValue: {
@@ -13,8 +16,8 @@ const props = defineProps({
     default() {
       return {
         name: '',
-        width: 500,
-        height: 500,
+        width: 250,
+        height: 175,
         data: []
       };
     }
@@ -22,7 +25,16 @@ const props = defineProps({
   variables: {
     type: Array,
     default() {
-      return [];
+      return [
+        { key: 'asset_num', label: '资产编号' },
+        { key: 'asset_name', label: '资产名称' },
+        { key: 'barcode_code', label: '条形码编码' },
+        { key: 'qr_code', label: '二维码数据/链接' },
+        { key: 'serial_no', label: '序列号 SN' },
+        { key: 'specification', label: '规格型号' },
+        { key: 'use_dept', label: '使用部门' },
+        { key: 'storage_place', label: '存放地点' }
+      ];
     }
   }
 });
@@ -31,6 +43,7 @@ const emit = defineEmits(['update:modelValue', 'save', 'print']);
 
 // 防止 modelValue ↔ storeList 双向 watch 互相震荡的标志位
 const _isSyncingFromParent = ref(false);
+const printing = ref(false);
 
 // Watch modelValue from parent → 加载到内部 store
 watch(
@@ -74,55 +87,30 @@ const handleSave = (template) => {
   emit('save', template);
 };
 
-const handlePrint = (template) => {
+const handlePrint = async (template) => {
   emit('print', template);
-  
-  // Standard simple print: open a new window and call print on the DesignPreview
-  const printWindow = window.open('', '_blank', 'width=800,height=600');
-  if (printWindow) {
-    printWindow.document.write('<html><head><title>打印标签</title>');
-    printWindow.document.write('<style>');
-    printWindow.document.write(`
-      body { margin: 0; padding: 0; background-color: white; font-family: sans-serif; }
-      .template-wrap { box-sizing: border-box; overflow: hidden; position: relative; width: ${state.page.width}px; height: ${state.page.height}px; }
-      .component { position: absolute; box-sizing: border-box; }
-      .barcode-wrap { display: flex; align-items: center; flex-direction: column; justify-content: center; width: 100%; height: 100%; }
-      .barcode { max-width: 100%; }
-      .barcode-text { font-size: 12px; font-weight: normal; text-align: center; margin: 2px 0 0 0; }
-      .qr-code-wrap { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
-      .qr-code { max-width: 100%; max-height: 100%; }
-      .x-line-wrap { width: 100%; box-sizing: border-box; }
-      .y-line-wrap { box-sizing: border-box; height: 100%; }
-      .rectangle-wrap { box-sizing: border-box; }
-      .table-wrap { width: 100%; border-collapse: collapse; }
-      .table-wrap th, .table-wrap td { border: 1px solid black; padding: 5px; text-align: left; }
-    `);
-    printWindow.document.write('</style></head><body>');
-    
-    // Renders the HTML of the designed canvas. 
-    // Let's get the innerHTML of .drag-canvas-warp.board-canvas to print it directly
-    const boardCanvas = document.querySelector('.drag-canvas-warp.board-canvas');
-    if (boardCanvas) {
-      // Clone it to remove handles, bounds, guide lines
-      const clone = boardCanvas.cloneNode(true);
-      // Remove help lines
-      clone.querySelectorAll('.x-help-line, .y-help-line, .resize-area').forEach(el => el.remove());
-      // For each element inside the cloned DOM, remove resize indicators or selection classes
-      clone.querySelectorAll('.drag-warp').forEach(el => {
-        el.className = 'component'; // simplify class to component
-        el.style.backgroundColor = 'transparent';
-        el.style.border = 'none';
-      });
-      printWindow.document.write(`<div class="template-wrap" style="width:${state.page.width}px; height:${state.page.height}px; position: relative;">${clone.innerHTML}</div>`);
+  if (printing.value) return;
+
+  printing.value = true;
+  try {
+    const tpl = {
+      id: props.modelValue?.id,
+      name: props.modelValue?.name || '标签模板',
+      width: state.page.width,
+      height: state.page.height,
+      data: state.storeList
+    };
+    await printLabelJobs([{ template: tpl, variables: SAMPLE_PRINT_VARIABLES }]);
+    MessagePlugin.success('已打开打印对话框（使用示例数据预览，正式打印请走设备打印页）');
+  } catch (e) {
+    if (e?.code === 'POPUP_BLOCKED') {
+      MessagePlugin.warning('打印窗口被浏览器拦截，请允许本站点弹窗后重试');
+    } else {
+      console.error(e);
+      MessagePlugin.error('打印失败，请查看控制台');
     }
-    
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => {
-      printWindow.print();
-      printWindow.close();
-    }, 500);
+  } finally {
+    printing.value = false;
   }
 };
 

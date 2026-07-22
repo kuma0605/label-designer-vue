@@ -79,12 +79,8 @@ const onDeleteKeyUp = (e) => {
     }
   }
 
-  const activeType = state.activeComponent?.type;
-  const isEditable = activeType === 'TableUi';
   if (e.keyCode === 8 || e.keyCode === 46) { // Backspace or Delete
-    if (!isEditable) {
-      actions.removeActiveComponent();
-    }
+    actions.removeActiveComponent();
   }
   actions.updateValve(0);
 };
@@ -106,9 +102,8 @@ const handleDrop = (e) => {
     const varKey = e.dataTransfer.getData('variableKey');
     const varLabel = e.dataTransfer.getData('variableLabel');
     
-    const zoom = state.zoom || 1;
-    const canvasX = (clientX - boardRect.left) / zoom;
-    const canvasY = (clientY - boardRect.top) / zoom;
+    const canvasX = clientX - boardRect.left;
+    const canvasY = clientY - boardRect.top;
 
     const defaultProps = {
       position: {

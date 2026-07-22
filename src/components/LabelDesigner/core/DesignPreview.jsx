@@ -3,13 +3,15 @@ import { checkLine } from '@/utils';
 import PreviewText from './PreviewText.vue';
 import PreviewBarcode from './PreviewBarcode.vue';
 import PreviewQrcode from './PreviewQrcode.vue';
+import PreviewTable from './PreviewTable.vue';
 
 export default defineComponent({
   name: 'DesignPreview',
   components: {
     PreviewText,
     PreviewBarcode,
-    PreviewQrcode
+    PreviewQrcode,
+    PreviewTable
   },
   props: {
     template: {
@@ -48,7 +50,7 @@ export default defineComponent({
       const isXLine = type === 'XLineUi';
       const isYLine = type === 'YLineUi';
       const isBarcode = type === 'BarcodeUi';
-      const isText = type.includes('Text');
+      const isText = typeof type === 'string' && type.includes('Text');
       const isRectangle = type === 'RectangleUi';
 
       if (isXLine) {
@@ -87,9 +89,10 @@ export default defineComponent({
       const { fontSize, fontFamily, lineHeight, align, isBold } = cProps;
       const fontWeight = isBold ? 'bold' : 'normal';
       const isLine = checkLine(type);
-      // 优先用 rect（编辑态实时计算），否则 fallback 到 default（模板存储的尺寸）
-      const width = rect?.width ?? defaultRect?.width ?? 100;
-      const height = rect?.height ?? defaultRect?.height ?? 30;
+      
+      // 优先使用模板存储的实际画布尺寸与位置 (defaultRect.width / height, position.clientX / clientY)
+      const width = defaultRect?.width ?? rect?.width ?? 100;
+      const height = defaultRect?.height ?? rect?.height ?? 30;
 
       const topVal = position?.clientY ?? defaultRect?.y ?? 0;
       const leftVal = position?.clientX ?? defaultRect?.x ?? 0;
@@ -104,7 +107,7 @@ export default defineComponent({
         fontWeight,
         width: width + 'px',
         height: height + 'px',
-        padding: isLine ? '0' : '0 10px 0 0',
+        padding: '0',
         position: 'absolute',
         boxSizing: 'border-box'
       };
@@ -146,6 +149,12 @@ export default defineComponent({
           return <div class="y-line-wrap" style={selfStyle} />;
         case 'rectangle':
           return <div class="rectangle-wrap" style={{ ...selfStyle, width: '100%', height: '100%' }} />;
+        case 'table':
+          return (
+            <div class="table-wrap" style={{ width: '100%', height: '100%' }}>
+              <PreviewTable {...sharedProps} />
+            </div>
+          );
         default:
           // Custom Text
           return (
@@ -161,14 +170,18 @@ export default defineComponent({
 
     return () => {
       const { data = [], options = {} } = props.template;
+      const width = props.template.width || options.width || 500;
+      const height = props.template.height || options.height || 350;
       return (
         <div
           class="template-wrap"
           style={{
-            width: `${options.width || 500}px`,
-            height: `${options.height || 500}px`,
+            width: `${width}px`,
+            height: `${height}px`,
             position: 'relative',
-            backgroundColor: '#ffffff'
+            backgroundColor: '#ffffff',
+            overflow: 'hidden',
+            boxSizing: 'border-box'
           }}
         >
           {data.map((component) => (

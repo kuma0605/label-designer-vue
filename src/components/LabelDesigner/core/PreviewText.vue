@@ -7,6 +7,13 @@ const props = defineProps({
   variables: { type: Object, default: () => ({}) }
 });
 
+const textStyle = computed(() => {
+  const { isBold } = props.component.props || {};
+  return {
+    fontWeight: isBold ? 'bold' : 'normal'
+  };
+});
+
 // 渲染文本：将 ${key} 占位符替换为真实数据
 const renderedHtml = computed(() => {
   const { variable, props: cProps } = props.component;
@@ -45,6 +52,7 @@ function escapeHtml(str) {
 <template>
   <div
     class="detail"
+    :style="textStyle"
     v-html="renderedHtml"
   />
 </template>
@@ -52,7 +60,6 @@ function escapeHtml(str) {
 <style scoped>
 .detail {
   display: inline-block;
-  font-weight: normal;
   word-break: break-all;
   word-wrap: break-word;
   width: 100%;

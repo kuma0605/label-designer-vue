@@ -184,28 +184,25 @@ const initLayoutScheme = () => {
   offsetLeft.value = board.value.left;
   offsetTop.value = board.value.top;
 
-  const zoom = state.zoom || 1;
-
   if (isInstance) {
     x.value = defaultData.x;
     y.value = defaultData.y;
     width.value = defaultData.width;
     height.value = defaultData.height || '';
   } else {
-    // Drop point calculation relative to canvas in unscaled coordinates
-    const canvasRect = canvas.getBoundingClientRect();
-    x.value = (props.defaultX - canvasRect.left) / zoom;
-    y.value = (props.defaultY - canvasRect.top) / zoom;
-    
+    // handleDrop already stores canvas-relative coords in position.clientX/Y
+    x.value = props.defaultX;
+    y.value = props.defaultY;
+
     if (defaultData.width !== '' && defaultData.width !== undefined) {
       width.value = defaultData.width;
     } else {
-      width.value = rect.width / zoom;
+      width.value = rect.width;
     }
     if (defaultData.height !== '' && defaultData.height !== undefined) {
       height.value = defaultData.height;
     } else {
-      height.value = rect.height / zoom;
+      height.value = rect.height;
     }
   }
   nextTick(() => {
@@ -285,13 +282,12 @@ const lineChecker = () => {
 
 const handleMouseMove = (e) => {
   isMove.value = true;
-  const zoom = state.zoom || 1;
   const canvas = document.querySelector('.drag-canvas-warp.board-canvas');
   if (!canvas) return;
   const canvasRect = canvas.getBoundingClientRect();
 
-  const mouseCanvasX = (e.clientX - canvasRect.left) / zoom;
-  const mouseCanvasY = (e.clientY - canvasRect.top) / zoom;
+  const mouseCanvasX = e.clientX - canvasRect.left;
+  const mouseCanvasY = e.clientY - canvasRect.top;
 
   const newX = mouseCanvasX - downX.value;
   const newY = mouseCanvasY - downY.value;
@@ -328,13 +324,12 @@ const handleMouseUp = () => {
 
 const handleMouseDown = (e) => {
   actions.clearSelection();
-  const zoom = state.zoom || 1;
   const canvas = document.querySelector('.drag-canvas-warp.board-canvas');
   if (!canvas) return;
   const canvasRect = canvas.getBoundingClientRect();
 
-  const mouseCanvasX = (e.clientX - canvasRect.left) / zoom;
-  const mouseCanvasY = (e.clientY - canvasRect.top) / zoom;
+  const mouseCanvasX = e.clientX - canvasRect.left;
+  const mouseCanvasY = e.clientY - canvasRect.top;
 
   downX.value = mouseCanvasX - x.value;
   downY.value = mouseCanvasY - y.value;
@@ -351,9 +346,8 @@ const handleResizeMove = (e) => {
   const downW = downWidth.value;
   const downH = downHeight.value;
   
-  const zoom = state.zoom || 1;
-  const moveX = (clientX - resizeDownX.value) / zoom;
-  const moveY = (clientY - resizeDownY.value) / zoom;
+  const moveX = clientX - resizeDownX.value;
+  const moveY = clientY - resizeDownY.value;
   
   const offsetR = resizeOffsetRight.value;
   const offsetB = resizeOffsetBottom.value;

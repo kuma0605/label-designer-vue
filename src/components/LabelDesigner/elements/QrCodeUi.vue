@@ -24,7 +24,10 @@ const qrDataUrl = ref('');
 
 const renderQrcode = () => {
   const { data, options } = props;
-  if (!data) return;
+  if (!data) {
+    qrDataUrl.value = '';
+    return;
+  }
   const config = {
     errorCorrectionLevel: options.errorCorrectionLevel || 'H',
     margin: options.margin || 4,
@@ -35,6 +38,7 @@ const renderQrcode = () => {
   QrCode.toDataURL(data, config, (err, res) => {
     if (err) {
       console.error('QR Code render error:', err);
+      qrDataUrl.value = '';
       return;
     }
     qrDataUrl.value = res;
@@ -58,11 +62,13 @@ onMounted(() => {
 <template>
   <div class="qr-code-wrap">
     <img
+      v-if="qrDataUrl"
       :class="['qr-code', elementId]"
       :src="qrDataUrl"
       alt="qrcode"
       draggable="false"
     />
+    <span v-else class="qr-placeholder">二维码</span>
   </div>
 </template>
 
@@ -77,6 +83,11 @@ onMounted(() => {
     max-width: 100%;
     max-height: 100%;
     vertical-align: middle;
+    user-select: none;
+  }
+  .qr-placeholder {
+    font-size: 12px;
+    color: #999;
     user-select: none;
   }
 }

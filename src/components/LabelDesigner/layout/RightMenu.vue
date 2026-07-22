@@ -10,15 +10,16 @@ const activeTab = ref('style');
 const formPage = ref({
   width: 50,
   height: 35,
-  pageName: 'custom'
+  pageName: 'label-5035'
 });
 
+// 约定：1mm = 5px（编辑折中比例）
 const pageSizeOptions = [
-  { label: 'A3（297mm X 420mm）', value: 'a3', size: [500, 500] },
-  { label: 'A4（210mm X 297mm）', value: 'a4', size: [600, 600] },
-  { label: 'A5（148mm X 210mm）', value: 'a5', size: [800, 800] },
-  { label: '标签纸 (50mm X 35mm)', value: 'label-5035', size: [500, 350] },
-  { label: '自定义尺寸', value: 'custom', size: [500, 350] }
+  { label: '标签纸 40×30 mm', value: 'label-4030', size: [200, 150] },
+  { label: '标签纸 50×35 mm', value: 'label-5035', size: [250, 175] },
+  { label: '标签纸 60×40 mm', value: 'label-6040', size: [300, 200] },
+  { label: '标签纸 80×50 mm', value: 'label-8050', size: [400, 250] },
+  { label: '自定义尺寸', value: 'custom', size: [250, 175] }
 ];
 
 const lineOptions = [
@@ -75,8 +76,8 @@ watch(
   () => [state.page.width, state.page.height],
   ([newWidth, newHeight]) => {
     if (newWidth && newHeight) {
-      formPage.value.width = newWidth / 10;
-      formPage.value.height = newHeight / 10;
+      formPage.value.width = newWidth / 5;
+      formPage.value.height = newHeight / 5;
       
       const matchingOption = pageSizeOptions.find(
         opt => opt.size[0] === newWidth && opt.size[1] === newHeight
@@ -100,16 +101,16 @@ const onPageSizeChange = (val) => {
   const selectedOption = pageSizeOptions.find(item => item.value === val);
   if (selectedOption) {
     const [w, h] = selectedOption.size;
-    formPage.value.width = w / 10;
-    formPage.value.height = h / 10;
+    formPage.value.width = w / 5;
+    formPage.value.height = h / 5;
     actions.setPageSize(w, h);
     emit('page-size-change', selectedOption.size);
   }
 };
 
 const handleSetCustomPageSize = () => {
-  const w = Math.round(formPage.value.width * 10);
-  const h = Math.round(formPage.value.height * 10);
+  const w = Math.round(formPage.value.width * 5);
+  const h = Math.round(formPage.value.height * 5);
   actions.setPageSize(w, h);
   emit('page-size-change', [w, h]);
 };
@@ -233,6 +234,13 @@ const handleSetCustomPageSize = () => {
                 </t-select>
               </t-form-item>
             </template>
+
+            <t-form-item style="margin-top: 24px;">
+              <t-button block theme="danger" variant="outline" @click="actions.removeActiveComponent()">
+                <template #icon><t-icon name="delete" /></template>
+                删除当前物料
+              </t-button>
+            </t-form-item>
           </t-form>
         </t-tab-panel>
       </t-tabs>

@@ -35,7 +35,6 @@ const handleSave = () => {
     data: JSON.parse(JSON.stringify(state.storeList))
   };
   emit('save', template);
-  MessagePlugin.success('保存成功！');
 };
 
 const handleSaveToImg = async () => {
@@ -44,7 +43,7 @@ const handleSaveToImg = async () => {
   
   try {
     const canvas = await html2canvas($el, {
-      allowTaint: true,
+      allowTaint: false,
       useCORS: true,
       backgroundColor: '#ffffff',
       width: $el.offsetWidth,
@@ -77,18 +76,6 @@ const handlePrint = () => {
   <div class="header-nav-warp">
     <div class="logo-area">
       标签设计器 <span class="version-tag">Vue3 v1.0</span>
-      <div class="zoom-selector-wrapper" style="display: flex; align-items: center; gap: 8px; margin-left: 24px; font-weight: normal;">
-        <span style="font-size: 12px; color: #666; display: flex; align-items: center; gap: 4px;">
-          <t-icon name="zoom-in" size="14px" />
-          缩放比例:
-        </span>
-        <t-select v-model="state.zoom" style="width: 150px;" size="small">
-          <t-option :value="0.378" label="1:1 实物比例 (100%)" />
-          <t-option :value="0.5" label="1.3x 放大 (130%)" />
-          <t-option :value="0.75" label="2.0x 放大 (200%)" />
-          <t-option :value="1.0" label="2.6x 特写 (260%)" />
-        </t-select>
-      </div>
     </div>
     
     <div class="handle-area">

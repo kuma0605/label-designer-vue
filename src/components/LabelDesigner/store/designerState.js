@@ -1,49 +1,12 @@
 import { reactive, nextTick } from 'vue';
 import _ from 'lodash';
+import { getStringVars } from '@/utils/index.js';
+import { normalizeElement } from '@/utils/templateStore.js';
 
-// Simple unique ID generator to replace letter-id dependency
+// 带前缀，避免 ID 以数字开头导致 CSS 选择器异常
 export const generateId = () => {
-  return Math.random().toString(36).substring(2, 10);
+  return `el_${Math.random().toString(36).substring(2, 10)}`;
 };
-
-const defaultTemplate = [
-  {
-    "name": "使用手册",
-    "data": [
-      {
-        "name": "customText",
-        "type": "TextUi",
-        "classify": "TextMenu",
-        "title": "自定义文本",
-        "instance": true,
-        "tag": "span",
-        "updateId": "1636365752813",
-        "position": { "clientX": 0, "clientY": 0 },
-        "variable": {
-          "enable": false,
-          "textData": [
-            { "value": "使", "key": "", "indexes": 0 },
-            { "value": "用", "key": "", "indexes": 1 },
-            { "value": "手", "key": "", "indexes": 2 },
-            { "value": "册", "key": "", "indexes": 3 }
-          ]
-        },
-        "default": { "height": 65, "width": 600, "x": 0, "y": 0 },
-        "props": {
-          "text": "使用手册",
-          "align": "center",
-          "fontFamily": "",
-          "fontSize": "30px",
-          "lineHeight": "2.5",
-          "isBold": false,
-          "hasBorder": false
-        },
-        "id": "kvqhuc2e",
-        "rect": { "x": 362.5, "y": 180.5, "width": 600, "height": 65, "top": 180.5, "right": 962.5, "bottom": 245.5, "left": 362.5 }
-      }
-    ]
-  }
-];
 
 export const state = reactive({
   activeComponent: null,
@@ -51,14 +14,13 @@ export const state = reactive({
     instance: [],
     ids: []
   },
-  zoom: 0.378,
   line: {
     top: '',
     left: ''
   },
   page: {
-    width: 500,
-    height: 500
+    width: 250,
+    height: 175
   },
   board: {
     x: '',
@@ -85,6 +47,7 @@ export const state = reactive({
       variable: { enable: false, textData: [] },
       props: {
         borderStyle: 'solid',
+        columnWidths: [33.33, 33.33, 33.34],
         tableData: [
           { '生产日期': '2022-12-1', '产地': '湖北-武汉', '成分': '金子，钻石，翡翠' },
           { '生产日期': '2022-12-2', '产地': '湖北-武汉', '成分': '金子，钻石，翡翠' }
@@ -108,7 +71,7 @@ export const state = reactive({
         bodyHeight: 40,
         fontSize: 14,
         displayValue: '1',
-        data: '123456789'
+        data: '${barcode_code}'
       }
     },
     xLine: {
@@ -159,7 +122,7 @@ export const state = reactive({
       variable: { enable: false, textData: [] },
       default: { width: '', height: '', x: '', y: '' },
       props: {
-        data: 'https://shixiaoxi.cn/',
+        data: '${qr_code}',
         options: { margin: 4, width: '', scale: 4, errorCorrectionLevel: 'H' }
       }
     },
@@ -192,8 +155,7 @@ export const actions = {
   setComponentVariable() {
     const active = state.storeList.find((item) => item.id === state.activeComponent?.id);
     if (active) {
-      const { getStringVars } = import.meta.glob('@/utils/index.js', { eager: true })['/src/utils/index.js'] || {};
-      const value = getStringVars ? getStringVars(active.props.text || active.props.data || '') : [];
+      const value = getStringVars(active.props?.text || active.props?.data || '');
       if (!active.variable) {
         active.variable = { enable: false, textData: [] };
       }
@@ -222,7 +184,7 @@ export const actions = {
 
   updateStoreList(template) {
     state.storeLoading = true;
-    state.storeList = template.map((item) => _.cloneDeep(item));
+    state.storeList = (template || []).map((item) => normalizeElement(_.cloneDeep(item)));
     setTimeout(() => {
       state.storeLoading = false;
     }, 300);
@@ -319,9 +281,38 @@ export const actions = {
     }
   },
 
+  ensureTableColumnWidths(active) {
+    if (!active?.props?.tableData?.length) return [];
+    const colCount = Object.keys(active.props.tableData[0]).length;
+    const widths = active.props.columnWidths;
+    if (Array.isArray(widths) && widths.length === colCount) {
+      return widths.slice();
+    }
+    const equal = Number((100 / colCount).toFixed(2));
+    const next = Array(colCount).fill(equal);
+    const sum = equal * colCount;
+    if (next.length) {
+      next[next.length - 1] = Number((100 - (sum - equal)).toFixed(2));
+    }
+    active.props.columnWidths = next;
+    return next;
+  },
+
+  setTableColumnWidths(widths, elementId) {
+    const id = elementId || state.activeComponent?.id;
+    const target = state.storeList.find((item) => item.id === id);
+    if (target && Array.isArray(widths)) {
+      target.props.columnWidths = widths.map((w) => Number(Number(w).toFixed(2)));
+    }
+  },
+
   removeTableColumn(removeKey) {
     const active = state.storeList.find((item) => item.id === state.activeComponent?.id);
     if (active) {
+      const keys = Object.keys(active.props.tableData[0] || {});
+      const removeIndex = keys.indexOf(removeKey);
+      const widths = this.ensureTableColumnWidths(active);
+
       active.props.tableData = active.props.tableData.map(item => {
         const newItem = {};
         for (const key in item) {
@@ -331,12 +322,28 @@ export const actions = {
         }
         return newItem;
       });
+
+      if (removeIndex >= 0 && widths.length > 1) {
+        const next = widths.slice();
+        const removedWidth = next.splice(removeIndex, 1)[0];
+        if (removeIndex === 0) {
+          next[0] = Number((next[0] + removedWidth).toFixed(2));
+        } else {
+          next[removeIndex - 1] = Number((next[removeIndex - 1] + removedWidth).toFixed(2));
+        }
+        active.props.columnWidths = next;
+      } else if (widths.length <= 1) {
+        active.props.columnWidths = [];
+      }
     }
   },
 
   addTableColumn(insertIndex) {
     const active = state.storeList.find((item) => item.id === state.activeComponent?.id);
     if (active) {
+      const widths = this.ensureTableColumnWidths(active);
+      const beforeCount = Object.keys(active.props.tableData[0] || {}).length;
+
       active.props.tableData = active.props.tableData.map(item => {
         let keyIndex = 0;
         const newItem = {};
@@ -349,6 +356,19 @@ export const actions = {
         }
         return newItem;
       });
+
+      const afterCount = Object.keys(active.props.tableData[0] || {}).length;
+      if (afterCount === beforeCount + 1 && widths.length) {
+        // New column is inserted after the insertIndex-th key → 0-based index insertIndex
+        // Split width from the preceding column (insertIndex - 1).
+        const next = widths.slice();
+        const sourceIdx = Math.max(0, Math.min(insertIndex - 1, next.length - 1));
+        const half = Number((next[sourceIdx] / 2).toFixed(2));
+        const rest = Number((next[sourceIdx] - half).toFixed(2));
+        next[sourceIdx] = rest;
+        next.splice(sourceIdx + 1, 0, half);
+        active.props.columnWidths = next;
+      }
     }
   },
 

@@ -1,6 +1,9 @@
 <script setup>
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { on, off } from '@/utils/dom';
 import { actions, state } from '../store/designerState.js';
+
+const MIN_COL_PERCENT = 8;
 
 const props = defineProps({
   elementId: {
@@ -20,10 +23,22 @@ const props = defineProps({
     default() {
       return [];
     }
+  },
+  columnWidths: {
+    type: Array,
+    default() {
+      return [];
+    }
   }
 });
 
 const emit = defineEmits(['complete']);
+
+const tableRef = ref(null);
+const resizeIndex = ref(-1);
+const resizeStartX = ref(0);
+const resizeStartWidths = ref([]);
+const didResizeDrag = ref(false);
 
 const getItemStyle = computed(() => {
   return {
@@ -31,8 +46,30 @@ const getItemStyle = computed(() => {
   };
 });
 
+const columns = computed(() => {
+  if (!props.tableData?.length) return [];
+  return Object.keys(props.tableData[0] || {});
+});
+
+const resolvedWidths = computed(() => {
+  const colCount = columns.value.length;
+  if (!colCount) return [];
+  const widths = props.columnWidths;
+  if (Array.isArray(widths) && widths.length === colCount) {
+    return widths;
+  }
+  const equal = Number((100 / colCount).toFixed(2));
+  const next = Array(colCount).fill(equal);
+  next[next.length - 1] = Number((100 - equal * (colCount - 1)).toFixed(2));
+  return next;
+});
+
 onMounted(() => {
   emit('complete');
+});
+
+onUnmounted(() => {
+  clearResizeListeners();
 });
 
 const onKeyChange = (e, oldKey) => {
@@ -70,18 +107,120 @@ const handleAddColumn = (index) => {
 const handleRemoveColumn = (key) => {
   actions.removeTableColumn(key);
 };
+
+const clearResizeListeners = () => {
+  off(document, 'mousemove', handleResizeMove);
+  off(document, 'mouseup', handleResizeUp);
+};
+
+const handleResizeMove = (e) => {
+  if (resizeIndex.value < 0 || !tableRef.value) return;
+  const deltaX = e.clientX - resizeStartX.value;
+  if (Math.abs(deltaX) > 2) {
+    didResizeDrag.value = true;
+  }
+
+  const tableWidth = tableRef.value.getBoundingClientRect().width || 1;
+  const deltaPercent = (deltaX / tableWidth) * 100;
+  const leftIdx = resizeIndex.value;
+  const rightIdx = leftIdx + 1;
+  const start = resizeStartWidths.value;
+  if (rightIdx >= start.length) return;
+
+  const pairTotal = start[leftIdx] + start[rightIdx];
+  let nextLeft = start[leftIdx] + deltaPercent;
+  nextLeft = Math.max(MIN_COL_PERCENT, Math.min(pairTotal - MIN_COL_PERCENT, nextLeft));
+  const nextRight = pairTotal - nextLeft;
+
+  const next = start.slice();
+  next[leftIdx] = Number(nextLeft.toFixed(2));
+  next[rightIdx] = Number(nextRight.toFixed(2));
+  actions.setTableColumnWidths(next, props.elementId);
+};
+
+const handleResizeUp = () => {
+  clearResizeListeners();
+  resizeIndex.value = -1;
+  if (didResizeDrag.value) {
+    const suppressClick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      document.removeEventListener('click', suppressClick, true);
+      didResizeDrag.value = false;
+    };
+    document.addEventListener('click', suppressClick, true);
+  }
+};
+
+const handleColResizeDown = (e, colIndex) => {
+  if (colIndex >= columns.value.length - 1) return;
+  e.preventDefault();
+  e.stopPropagation();
+  didResizeDrag.value = false;
+  resizeIndex.value = colIndex;
+  resizeStartX.value = e.clientX;
+  resizeStartWidths.value = resolvedWidths.value.slice();
+  on(document, 'mousemove', handleResizeMove);
+  on(document, 'mouseup', handleResizeUp);
+};
+
+const onColHandleClick = (e) => {
+  if (didResizeDrag.value) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+};
 </script>
 
 <template>
   <div class="table-wrap" :style="getItemStyle">
-    <table class="w-100 table-wrap__table" border="0" cellspacing="1px" cellpadding="0" style="width: 100%; border-collapse: collapse;">
+    <table
+      ref="tableRef"
+      class="w-100 table-wrap__table"
+      border="0"
+      cellspacing="1px"
+      cellpadding="0"
+    >
+      <colgroup>
+        <col
+          v-for="(width, index) in resolvedWidths"
+          :key="`col-${index}`"
+          :style="{ width: `${width}%` }"
+        />
+      </colgroup>
       <thead>
         <tr>
           <th v-for="(item, key, index) in tableData[0]" :key="index">
             <div class="table-wrap__th">
               <p contenteditable="true" @blur="onKeyChange($event, key)">{{ key }}</p>
+              <!-- 非末列：拖拽改宽；选中时单击仍可打开插删列菜单 -->
+              <template v-if="index < columns.length - 1">
+                <t-popup
+                  v-if="isActive"
+                  placement="right"
+                  trigger="click"
+                  :disabled="didResizeDrag"
+                >
+                  <template #content>
+                    <div class="func-list">
+                      <div class="item" @click.stop="handleAddColumn(index)">插入列</div>
+                      <div class="item" @click.stop="handleRemoveColumn(key)">删除列</div>
+                    </div>
+                  </template>
+                  <div
+                    class="table-wrap__col-handle"
+                    @mousedown="handleColResizeDown($event, index)"
+                    @click="onColHandleClick"
+                  />
+                </t-popup>
+                <div
+                  v-else
+                  class="table-wrap__col-handle"
+                  @mousedown="handleColResizeDown($event, index)"
+                />
+              </template>
               <t-popup
-                v-if="isActive"
+                v-else-if="isActive"
                 placement="right"
                 trigger="click"
               >
@@ -91,7 +230,7 @@ const handleRemoveColumn = (key) => {
                     <div class="item" @click.stop="handleRemoveColumn(key)">删除列</div>
                   </div>
                 </template>
-                <div class="table-wrap__add"></div>
+                <div class="table-wrap__add" @mousedown.stop />
               </t-popup>
             </div>
           </th>
@@ -144,6 +283,12 @@ const handleRemoveColumn = (key) => {
   --table-border-color: #000;
   position: relative;
 
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
   &__place {
     height: 30px;
   }
@@ -163,6 +308,22 @@ const handleRemoveColumn = (key) => {
     &:hover {
       opacity: 1;
       height: 5px;
+    }
+  }
+
+  &__col-handle {
+    position: absolute;
+    top: 0;
+    right: -3px;
+    z-index: 110;
+    width: 6px;
+    height: 100%;
+    cursor: col-resize;
+    background-color: #0052d9;
+    opacity: 0.15;
+    &:hover {
+      opacity: 0.7;
+      width: 6px;
     }
   }
 
@@ -186,6 +347,8 @@ const handleRemoveColumn = (key) => {
       margin: 0;
       min-width: 30px;
       outline: none;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .table-wrap__th {
       padding: 6px 10px;
@@ -206,6 +369,8 @@ const handleRemoveColumn = (key) => {
       width: 100%;
       min-height: 20px;
       outline: none;
+      overflow: hidden;
+      word-break: break-all;
     }
     .table-wrap__td {
       padding: 6px 10px;

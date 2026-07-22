@@ -2,6 +2,11 @@
 import { ref, onMounted } from 'vue';
 import LabelDesigner from '../components/LabelDesigner/index.vue';
 import { MessagePlugin, DialogPlugin } from 'tdesign-vue-next';
+import {
+  loadTemplatesFromStorage,
+  saveTemplatesToStorage,
+  createId
+} from '@/utils/templateStore.js';
 
 // 视图：'dashboard' | 'editor'
 const currentView = ref('dashboard');
@@ -9,6 +14,9 @@ const currentView = ref('dashboard');
 const variables = ref([
   { key: 'asset_num', label: '资产编号' },
   { key: 'asset_name', label: '资产名称' },
+  { key: 'barcode_code', label: '条形码编码' },
+  { key: 'qr_code', label: '二维码数据/链接' },
+  { key: 'serial_no', label: '序列号 SN' },
   { key: 'specification', label: '规格型号' },
   { key: 'use_dept', label: '使用部门' },
   { key: 'storage_place', label: '存放地点' }
@@ -16,163 +24,36 @@ const variables = ref([
 
 const activeTemplate = ref(null);
 const templatesList = ref([]);
-
-const defaultTemplates = [
-  {
-    id: 'asset-tag-default',
-    name: '资产管理常规标签 (50x35mm)',
-    width: 500,
-    height: 350,
-    data: [
-      {
-        id: 'title-text-0',
-        name: 'customText',
-        type: 'TextUi',
-        title: '固定资产标签',
-        instance: true,
-        position: { clientX: 300, clientY: 100 },
-        default: { width: 460, height: 35, x: 20, y: 15 },
-        props: {
-          text: '固定资产设备卡片',
-          align: 'center',
-          fontFamily: '',
-          fontSize: '18px',
-          isBold: true,
-          hasBorder: false
-        }
-      },
-      {
-        id: 'asset-num-var',
-        name: 'customText',
-        type: 'TextUi',
-        title: '资产编号',
-        instance: true,
-        position: { clientX: 300, clientY: 150 },
-        default: { width: 280, height: 25, x: 20, y: 70 },
-        props: {
-          text: '资产编号：${asset_num}',
-          align: 'left',
-          fontFamily: '',
-          fontSize: '13px',
-          isBold: false,
-          hasBorder: false
-        }
-      },
-      {
-        id: 'asset-name-var',
-        name: 'customText',
-        type: 'TextUi',
-        title: '资产名称',
-        instance: true,
-        position: { clientX: 300, clientY: 180 },
-        default: { width: 280, height: 25, x: 20, y: 105 },
-        props: {
-          text: '资产名称：${asset_name}',
-          align: 'left',
-          fontFamily: '',
-          fontSize: '13px',
-          isBold: false,
-          hasBorder: false
-        }
-      },
-      {
-        id: 'asset-place-var',
-        name: 'customText',
-        type: 'TextUi',
-        title: '存放地点',
-        instance: true,
-        position: { clientX: 300, clientY: 210 },
-        default: { width: 280, height: 25, x: 20, y: 140 },
-        props: {
-          text: '使用地点：${storage_place}',
-          align: 'left',
-          fontFamily: '',
-          fontSize: '13px',
-          isBold: false,
-          hasBorder: false
-        }
-      },
-      {
-        id: 'barcode-el-0',
-        name: 'barCode',
-        type: 'BarcodeUi',
-        title: '条码',
-        instance: true,
-        position: { clientX: 300, clientY: 260 },
-        default: { width: 280, height: 75, x: 20, y: 190 },
-        props: {
-          format: 'CODE128',
-          lineWidth: 2,
-          bodyHeight: 40,
-          fontSize: 12,
-          displayValue: '1',
-          data: '${asset_num}'
-        }
-      },
-      {
-        id: 'qrcode-el-0',
-        name: 'qrCode',
-        type: 'QrCodeUi',
-        title: '二维码',
-        instance: true,
-        position: { clientX: 600, clientY: 200 },
-        default: { width: 140, height: 140, x: 330, y: 70 },
-        props: {
-          data: '${asset_num}',
-          options: { margin: 2, scale: 4, errorCorrectionLevel: 'H' }
-        }
-      },
-      {
-        id: 'divider-line',
-        name: 'xLine',
-        type: 'XLineUi',
-        title: '分隔线',
-        instance: true,
-        position: { clientX: 300, clientY: 240 },
-        default: { width: 460, height: 1, x: 20, y: 60 },
-        props: { width: 460, height: 1, lineType: 'solid' }
-      }
-    ]
-  }
-];
+const editSnapshot = ref('');
 
 const loadTemplates = () => {
-  const local = localStorage.getItem('label_templates_v3');
-  if (local) {
-    try {
-      const list = JSON.parse(local);
-      templatesList.value = list.map(item => {
-        if (!item.id) {
-          item.id = `tpl-${Math.random().toString(36).substring(2, 10)}`;
-        }
-        return item;
-      });
-    } catch (e) {
-      templatesList.value = [...defaultTemplates];
-    }
-  } else {
-    templatesList.value = [...defaultTemplates];
-    saveToLocal();
-  }
+  templatesList.value = loadTemplatesFromStorage();
 };
 
 const saveToLocal = () => {
-  localStorage.setItem('label_templates_v3', JSON.stringify(templatesList.value));
+  saveTemplatesToStorage(templatesList.value);
+};
+
+const isEditorDirty = () => {
+  if (!activeTemplate.value) return false;
+  return JSON.stringify(activeTemplate.value) !== editSnapshot.value;
 };
 
 const handleEdit = (template) => {
   activeTemplate.value = JSON.parse(JSON.stringify(template));
+  editSnapshot.value = JSON.stringify(activeTemplate.value);
   currentView.value = 'editor';
 };
 
 const handleCreate = () => {
   activeTemplate.value = {
-    id: `tpl-${Date.now()}`,
+    id: createId('tpl'),
     name: '新建自定义模板',
-    width: 500,
-    height: 350,
+    width: 250,
+    height: 175,
     data: []
   };
+  editSnapshot.value = JSON.stringify(activeTemplate.value);
   currentView.value = 'editor';
 };
 
@@ -203,14 +84,32 @@ const handleSave = (savedTpl) => {
     templatesList.value.push(finalTpl);
   }
   saveToLocal();
-  MessagePlugin.success('保存模板并持久化成功！');
+  MessagePlugin.success('模板已保存');
   currentView.value = 'dashboard';
   activeTemplate.value = null;
+  editSnapshot.value = '';
+};
+
+const leaveEditor = () => {
+  currentView.value = 'dashboard';
+  activeTemplate.value = null;
+  editSnapshot.value = '';
 };
 
 const handleClose = () => {
-  currentView.value = 'dashboard';
-  activeTemplate.value = null;
+  if (!isEditorDirty()) {
+    leaveEditor();
+    return;
+  }
+  const confirm = DialogPlugin.confirm({
+    header: '未保存的修改',
+    body: '当前模板有未保存的修改，确定返回并丢弃吗？',
+    theme: 'warning',
+    onConfirm: () => {
+      leaveEditor();
+      confirm.destroy();
+    }
+  });
 };
 
 const getMiniLabelStyle = (width, height) => {
@@ -254,7 +153,7 @@ onMounted(() => {
         >
           <div class="card-preview">
             <div class="mini-label-box" :style="getMiniLabelStyle(item.width, item.height)">
-              <span class="preview-text">尺寸: {{ item.width / 10 }} x {{ item.height / 10 }} mm</span>
+              <span class="preview-text">尺寸: {{ item.width / 5 }} x {{ item.height / 5 }} mm</span>
               <span class="preview-count">包含物料: {{ item.data?.length || 0 }} 个</span>
             </div>
           </div>

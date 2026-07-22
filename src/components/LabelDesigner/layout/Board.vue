@@ -20,22 +20,18 @@ const downY = ref(0);
 const leftTapKey = ref(1);
 
 const containerStyle = computed(() => {
-  const zoom = state.zoom || 1;
   return {
-    width: `${state.page.width * zoom}px`,
-    height: `${state.page.height * zoom}px`,
+    width: `${state.page.width}px`,
+    height: `${state.page.height}px`,
     position: 'relative',
     flexShrink: 0
   };
 });
 
 const viewStyle = computed(() => {
-  const zoom = state.zoom || 1;
   return {
     width: `${state.page.width}px`,
     height: `${state.page.height}px`,
-    transform: `scale(${zoom})`,
-    transformOrigin: 'top left',
     position: 'absolute',
     top: 0,
     left: 0
@@ -204,9 +200,8 @@ const handleMouseDown = (e) => {
     width: 100%;
     height: 100%;
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    top: 0;
+    left: 0;
   }
 }
 </style>
