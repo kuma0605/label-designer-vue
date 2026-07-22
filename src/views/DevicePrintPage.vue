@@ -1,14 +1,32 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import DesignPreview from '../components/LabelDesigner/core/DesignPreview.jsx';
 import { MessagePlugin } from 'tdesign-vue-next';
 import { printLabelJobs } from '@/utils/printService.js';
 import { loadTemplatesFromStorage } from '@/utils/templateStore.js';
+import {
+  connectQz,
+  listPrinters,
+  isQzConnected
+} from '@/utils/qzClient.js';
 
 // 模板列表（demo：localStorage；种子数据来自 mock JSON）
 const templatesList = ref([]);
 const selectedTemplateId = ref('');
 const printing = ref(false);
+
+/** @type {import('vue').Ref<'browser' | 'qz'>} */
+const printAdapter = ref('browser');
+const printerList = ref([]);
+const selectedPrinter = ref('');
+const qzConnecting = ref(false);
+const qzConnected = ref(false);
+const qzStatusText = computed(() => {
+  if (printAdapter.value !== 'qz') return '';
+  if (qzConnecting.value) return '正在连接 QZ Tray…';
+  if (qzConnected.value) return 'QZ Tray 已连接';
+  return 'QZ Tray 未连接';
+});
 
 // 设备 demo 数据
 const deviceList = ref([
@@ -80,6 +98,45 @@ const loadTemplates = () => {
   templatesList.value = loadTemplatesFromStorage();
 };
 
+const refreshQzPrinters = async ({ silent = false } = {}) => {
+  qzConnecting.value = true;
+  try {
+    await connectQz();
+    qzConnected.value = isQzConnected();
+    const printers = await listPrinters();
+    printerList.value = printers;
+    if (!selectedPrinter.value || !printers.includes(selectedPrinter.value)) {
+      selectedPrinter.value = printers[0] || '';
+    }
+    if (!silent) {
+      MessagePlugin.success(`已加载 ${printers.length} 台打印机`);
+    }
+  } catch (e) {
+    qzConnected.value = false;
+    printerList.value = [];
+    selectedPrinter.value = '';
+    if (e?.code === 'QZ_NOT_RUNNING') {
+      MessagePlugin.warning('无法连接 QZ Tray，请确认已安装并启动');
+    } else if (!silent) {
+      MessagePlugin.error(e?.message || '连接 QZ Tray 失败');
+    }
+  } finally {
+    qzConnecting.value = false;
+  }
+};
+
+watch(printAdapter, (val) => {
+  if (val === 'qz' && showPrintModal.value) {
+    refreshQzPrinters({ silent: true });
+  }
+});
+
+watch(showPrintModal, (open) => {
+  if (open && printAdapter.value === 'qz') {
+    refreshQzPrinters({ silent: true });
+  }
+});
+
 // 打开打印弹窗
 const handleOpenPrintModal = () => {
   loadTemplates();
@@ -119,7 +176,7 @@ const handleRemoveFromPrint = (assetNum) => {
   }
 };
 
-// 确认打印：走浏览器打印适配器（后续可切 QZ）
+// 确认打印
 const handleConfirmPrint = async () => {
   const tpl = selectedTemplate.value;
   if (!tpl) {
@@ -130,6 +187,10 @@ const handleConfirmPrint = async () => {
     MessagePlugin.warning('请至少选择一个设备');
     return;
   }
+  if (printAdapter.value === 'qz' && !selectedPrinter.value) {
+    MessagePlugin.warning('请先选择打印机，或点击刷新连接 QZ Tray');
+    return;
+  }
 
   printing.value = true;
   try {
@@ -137,17 +198,28 @@ const handleConfirmPrint = async () => {
       template: tpl,
       variables: device
     }));
-    const count = await printLabelJobs(jobs);
-    MessagePlugin.success(`已打开打印对话框，共 ${count} 张标签（浏览器打印，后续可接 QZ）`);
+    const count = await printLabelJobs(jobs, {
+      adapter: printAdapter.value,
+      printer: selectedPrinter.value
+    });
+    if (printAdapter.value === 'qz') {
+      MessagePlugin.success(`已通过 QZ Tray 发送 ${count} 张标签到「${selectedPrinter.value}」`);
+    } else {
+      MessagePlugin.success(`已打开打印对话框，共 ${count} 张标签`);
+    }
     showPrintModal.value = false;
   } catch (e) {
     if (e?.code === 'POPUP_BLOCKED') {
       MessagePlugin.warning('打印窗口被浏览器拦截，请允许本站点弹窗后重试');
-    } else if (e?.code === 'QZ_NOT_READY') {
-      MessagePlugin.warning('QZ Tray 尚未接入，请先使用浏览器打印');
+    } else if (e?.code === 'QZ_NOT_RUNNING') {
+      MessagePlugin.warning('无法连接 QZ Tray，请确认已安装并启动');
+    } else if (e?.code === 'QZ_NO_PRINTER') {
+      MessagePlugin.warning('未找到可用打印机，请选择打印机后重试');
+    } else if (e?.code === 'QZ_PRINT_FAILED' || e?.code === 'QZ_CONNECT_FAILED') {
+      MessagePlugin.error(e.message || 'QZ 打印失败');
     } else {
       console.error(e);
-      MessagePlugin.error('打印失败，请查看控制台');
+      MessagePlugin.error(e?.message || '打印失败，请查看控制台');
     }
   } finally {
     printing.value = false;
@@ -366,8 +438,40 @@ onMounted(() => {
 
         <!-- 弹窗底部操作区 -->
         <div class="dialog-footer">
-          <div class="footer-summary">
-            已关联模板【<strong>{{ selectedTemplate.name }}</strong>】，共计 {{ selectedDevices.length }} 张设备标签
+          <div class="footer-left">
+            <div class="footer-summary">
+              已关联模板【<strong>{{ selectedTemplate.name }}</strong>】，共计 {{ selectedDevices.length }} 张设备标签
+            </div>
+            <div class="print-options">
+              <span class="opt-label">打印方式</span>
+              <t-radio-group v-model="printAdapter" variant="default-filled" size="small">
+                <t-radio-button value="browser">浏览器</t-radio-button>
+                <t-radio-button value="qz">QZ Tray</t-radio-button>
+              </t-radio-group>
+
+              <template v-if="printAdapter === 'qz'">
+                <span
+                  class="qz-status"
+                  :class="{ ok: qzConnected, busy: qzConnecting }"
+                >{{ qzStatusText }}</span>
+                <t-select
+                  v-model="selectedPrinter"
+                  placeholder="选择打印机"
+                  filterable
+                  style="width: 220px;"
+                  :loading="qzConnecting"
+                  :options="printerList.map((name) => ({ label: name, value: name }))"
+                />
+                <t-button
+                  variant="outline"
+                  size="small"
+                  :loading="qzConnecting"
+                  @click="refreshQzPrinters()"
+                >
+                  刷新打印机
+                </t-button>
+              </template>
+            </div>
           </div>
           <div class="footer-btns">
             <t-button variant="outline" @click="showPrintModal = false">取消</t-button>
@@ -674,9 +778,18 @@ onMounted(() => {
   .dialog-footer {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-end;
+    gap: 16px;
     border-top: 1px solid #edf0f4;
     padding-top: 14px;
+
+    .footer-left {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
 
     .footer-summary {
       font-size: 13px;
@@ -687,9 +800,35 @@ onMounted(() => {
       }
     }
 
+    .print-options {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+
+      .opt-label {
+        font-size: 13px;
+        color: #4e5969;
+      }
+
+      .qz-status {
+        font-size: 12px;
+        color: #f53f3f;
+
+        &.ok {
+          color: #00a870;
+        }
+
+        &.busy {
+          color: #e37318;
+        }
+      }
+    }
+
     .footer-btns {
       display: flex;
       gap: 12px;
+      flex-shrink: 0;
     }
   }
 }
