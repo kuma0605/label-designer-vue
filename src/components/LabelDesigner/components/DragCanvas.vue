@@ -106,10 +106,14 @@ const handleDrop = (e) => {
     const varKey = e.dataTransfer.getData('variableKey');
     const varLabel = e.dataTransfer.getData('variableLabel');
     
+    const zoom = state.zoom || 1;
+    const canvasX = (clientX - boardRect.left) / zoom;
+    const canvasY = (clientY - boardRect.top) / zoom;
+
     const defaultProps = {
       position: {
-        clientX,
-        clientY
+        clientX: canvasX,
+        clientY: canvasY
       }
     };
 

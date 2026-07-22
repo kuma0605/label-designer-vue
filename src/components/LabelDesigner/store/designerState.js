@@ -51,6 +51,7 @@ export const state = reactive({
     instance: [],
     ids: []
   },
+  zoom: 0.378,
   line: {
     top: '',
     left: ''

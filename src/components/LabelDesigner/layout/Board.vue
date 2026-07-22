@@ -19,10 +19,26 @@ const downX = ref(0);
 const downY = ref(0);
 const leftTapKey = ref(1);
 
+const containerStyle = computed(() => {
+  const zoom = state.zoom || 1;
+  return {
+    width: `${state.page.width * zoom}px`,
+    height: `${state.page.height * zoom}px`,
+    position: 'relative',
+    flexShrink: 0
+  };
+});
+
 const viewStyle = computed(() => {
+  const zoom = state.zoom || 1;
   return {
     width: `${state.page.width}px`,
-    height: `${state.page.height}px`
+    height: `${state.page.height}px`,
+    transform: `scale(${zoom})`,
+    transformOrigin: 'top left',
+    position: 'absolute',
+    top: 0,
+    left: 0
   };
 });
 
@@ -134,8 +150,10 @@ const handleMouseDown = (e) => {
   <div ref="viewRef" class="board-warp" @scroll="debounceViewScroll">
     <div class="view-wrapper" @mousedown.stop="handleMouseDown">
       <div v-if="reactVisible" ref="reactRef" class="react" :style="reactStyle" />
-      <div class="canvas-wrapper" :style="viewStyle">
-        <DragCanvas ref="canvasRef" class="board-canvas" />
+      <div class="canvas-container" :style="containerStyle">
+        <div class="canvas-wrapper" :style="viewStyle">
+          <DragCanvas ref="canvasRef" class="board-canvas" />
+        </div>
       </div>
     </div>
   </div>
@@ -170,12 +188,16 @@ const handleMouseDown = (e) => {
       pointer-events: none;
     }
   }
-  .canvas-wrapper {
+  .canvas-container {
+    box-shadow: 0 0 15px rgba(0, 21, 41, 0.08);
     background-color: white;
     border-radius: 2px;
-    box-shadow: 0 0 15px rgba(0, 21, 41, 0.08);
-    position: relative;
     flex-shrink: 0;
+    overflow: hidden;
+  }
+  .canvas-wrapper {
+    background-color: white;
+    position: relative;
     overflow: hidden;
   }
   .board-canvas {

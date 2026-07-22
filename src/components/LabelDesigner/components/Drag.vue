@@ -180,10 +180,11 @@ const initLayoutScheme = () => {
   if (!canvas || !element) return;
 
   const rect = $drag.getBoundingClientRect();
-  const { top, left } = element.getBoundingClientRect();
   board.value = canvas.getBoundingClientRect();
   offsetLeft.value = board.value.left;
   offsetTop.value = board.value.top;
+
+  const zoom = state.zoom || 1;
 
   if (isInstance) {
     x.value = defaultData.x;
@@ -191,18 +192,20 @@ const initLayoutScheme = () => {
     width.value = defaultData.width;
     height.value = defaultData.height || '';
   } else {
-    x.value = props.defaultX - left;
-    y.value = props.defaultY - top;
+    // Drop point calculation relative to canvas in unscaled coordinates
+    const canvasRect = canvas.getBoundingClientRect();
+    x.value = (props.defaultX - canvasRect.left) / zoom;
+    y.value = (props.defaultY - canvasRect.top) / zoom;
     
     if (defaultData.width !== '' && defaultData.width !== undefined) {
       width.value = defaultData.width;
     } else {
-      width.value = rect.width;
+      width.value = rect.width / zoom;
     }
     if (defaultData.height !== '' && defaultData.height !== undefined) {
       height.value = defaultData.height;
     } else {
-      height.value = rect.height;
+      height.value = rect.height / zoom;
     }
   }
   nextTick(() => {
@@ -238,7 +241,7 @@ const up = () => {
 };
 
 const down = () => {
-  const boardHeight = board.value.height || 500;
+  const boardHeight = state.page.height || 500;
   y.value = y.value + state.valve;
   if ((y.value + height.value) >= boardHeight) {
     y.value = boardHeight - height.value;
@@ -253,7 +256,7 @@ const left = () => {
 };
 
 const right = () => {
-  const boardWidth = board.value.width || 500;
+  const boardWidth = state.page.width || 500;
   x.value = x.value + state.valve;
   if ((x.value + width.value) >= boardWidth) {
     x.value = boardWidth - width.value;
@@ -282,12 +285,19 @@ const lineChecker = () => {
 
 const handleMouseMove = (e) => {
   isMove.value = true;
-  const clientX = e.clientX;
-  const clientY = e.clientY;
-  const boardHeight = board.value.height || 500;
-  const boardWidth = board.value.width || 500;
-  const newX = clientX - offsetLeft.value - downX.value;
-  const newY = clientY - offsetTop.value - downY.value;
+  const zoom = state.zoom || 1;
+  const canvas = document.querySelector('.drag-canvas-warp.board-canvas');
+  if (!canvas) return;
+  const canvasRect = canvas.getBoundingClientRect();
+
+  const mouseCanvasX = (e.clientX - canvasRect.left) / zoom;
+  const mouseCanvasY = (e.clientY - canvasRect.top) / zoom;
+
+  const newX = mouseCanvasX - downX.value;
+  const newY = mouseCanvasY - downY.value;
+
+  const boardWidth = state.page.width || 500;
+  const boardHeight = state.page.height || 500;
 
   if (newX <= 0) {
     x.value = 0;
@@ -318,11 +328,17 @@ const handleMouseUp = () => {
 
 const handleMouseDown = (e) => {
   actions.clearSelection();
-  const $drag = dragRef.value;
-  if (!$drag) return;
-  const { top, left } = $drag.getBoundingClientRect();
-  downX.value = e.clientX - left;
-  downY.value = e.clientY - top;
+  const zoom = state.zoom || 1;
+  const canvas = document.querySelector('.drag-canvas-warp.board-canvas');
+  if (!canvas) return;
+  const canvasRect = canvas.getBoundingClientRect();
+
+  const mouseCanvasX = (e.clientX - canvasRect.left) / zoom;
+  const mouseCanvasY = (e.clientY - canvasRect.top) / zoom;
+
+  downX.value = mouseCanvasX - x.value;
+  downY.value = mouseCanvasY - y.value;
+
   on(document, 'mousemove', handleMouseMove);
   on(document, 'mouseup', handleMouseUp);
   handleSetCurrent();
@@ -334,8 +350,11 @@ const handleResizeMove = (e) => {
   const defaultH = defaultHeight.value;
   const downW = downWidth.value;
   const downH = downHeight.value;
-  const moveX = clientX - resizeDownX.value;
-  const moveY = clientY - resizeDownY.value;
+  
+  const zoom = state.zoom || 1;
+  const moveX = (clientX - resizeDownX.value) / zoom;
+  const moveY = (clientY - resizeDownY.value) / zoom;
+  
   const offsetR = resizeOffsetRight.value;
   const offsetB = resizeOffsetBottom.value;
   const newWidth = downW + moveX;
@@ -373,11 +392,12 @@ const handleResizeUp = () => {
 };
 
 const handleResizeDown = (e) => {
-  const $drag = dragRef.value;
-  if (!$drag) return;
-  const { width: w, height: h } = $drag.getBoundingClientRect();
-  resizeOffsetRight.value = (board.value.width || 500) - $drag.offsetLeft - w;
-  resizeOffsetBottom.value = (board.value.height || 500) - $drag.offsetTop - h;
+  const w = width.value || 20;
+  const h = height.value || 20;
+  const boardWidth = state.page.width || 500;
+  const boardHeight = state.page.height || 500;
+  resizeOffsetRight.value = boardWidth - x.value - w;
+  resizeOffsetBottom.value = boardHeight - y.value - h;
   resizeDownX.value = e.clientX;
   resizeDownY.value = e.clientY;
   downWidth.value = w;
