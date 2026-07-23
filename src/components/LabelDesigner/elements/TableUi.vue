@@ -18,6 +18,18 @@ const props = defineProps({
     type: String,
     default: 'solid'
   },
+  align: {
+    type: String,
+    default: 'left'
+  },
+  isBold: {
+    type: Boolean,
+    default: false
+  },
+  fontSize: {
+    type: [String, Number],
+    default: '12px'
+  },
   tableData: {
     type: Array,
     default() {
@@ -39,6 +51,12 @@ const resizeIndex = ref(-1);
 const resizeStartX = ref(0);
 const resizeStartWidths = ref([]);
 const didResizeDrag = ref(false);
+
+const formattedFontSize = computed(() => {
+  if (!props.fontSize) return '12px';
+  const str = String(props.fontSize);
+  return str.includes('px') ? str : `${str}px`;
+});
 
 const getItemStyle = computed(() => {
   return {
@@ -192,7 +210,11 @@ const onColHandleClick = (e) => {
         <tr>
           <th v-for="(item, key, index) in tableData[0]" :key="index">
             <div class="table-wrap__th">
-              <p contenteditable="true" @blur="onKeyChange($event, key)">{{ key }}</p>
+              <p
+                contenteditable="true"
+                :style="{ textAlign: align || 'left', fontWeight: isBold ? 'bold' : 'normal', fontSize: formattedFontSize }"
+                @blur="onKeyChange($event, key)"
+              >{{ key }}</p>
               <!-- 非末列：拖拽改宽；选中时单击仍可打开插删列菜单 -->
               <template v-if="index < columns.length - 1">
                 <t-popup
@@ -240,7 +262,11 @@ const onColHandleClick = (e) => {
         <tr v-for="(item, index) in tableData" :key="index" class="table-wrap__tr">
           <td v-for="(child, itemKey, itemIndex) in item" :key="itemIndex">
             <div class="table-wrap__td">
-              <span contenteditable="true" @blur="onValueChange($event, itemKey, index)">{{ item[itemKey] }}</span>
+              <span
+                contenteditable="true"
+                :style="{ textAlign: align || 'left', fontWeight: isBold ? 'bold' : 'normal', fontSize: formattedFontSize }"
+                @blur="onValueChange($event, itemKey, index)"
+              >{{ item[itemKey] }}</span>
               <t-popup
                 v-if="isActive"
                 placement="right"

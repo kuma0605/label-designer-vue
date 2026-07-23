@@ -8,6 +8,14 @@ const props = defineProps({
 });
 
 const borderStyle = computed(() => props.component?.props?.borderStyle || 'solid');
+const align = computed(() => props.component?.props?.align || 'left');
+const isBold = computed(() => !!props.component?.props?.isBold);
+const formattedFontSize = computed(() => {
+  const f = props.component?.props?.fontSize;
+  if (!f) return '12px';
+  const str = String(f);
+  return str.includes('px') ? str : `${str}px`;
+});
 
 const tableData = computed(() => {
   const raw = props.component?.props?.tableData;
@@ -57,14 +65,20 @@ const columnWidths = computed(() => {
       <thead>
         <tr>
           <th v-for="col in columns" :key="col">
-            <div class="preview-table__th">{{ col }}</div>
+            <div
+              class="preview-table__th"
+              :style="{ textAlign: align, fontWeight: isBold ? 'bold' : 'normal', fontSize: formattedFontSize }"
+            >{{ col }}</div>
           </th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="(row, rowIndex) in tableData" :key="rowIndex">
           <td v-for="col in columns" :key="col">
-            <div class="preview-table__td">{{ row[col] }}</div>
+            <div
+              class="preview-table__td"
+              :style="{ textAlign: align, fontWeight: isBold ? 'bold' : 'normal', fontSize: formattedFontSize }"
+            >{{ row[col] }}</div>
           </td>
         </tr>
       </tbody>

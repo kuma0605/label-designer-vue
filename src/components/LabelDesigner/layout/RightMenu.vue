@@ -226,6 +226,29 @@ const handleSetCustomPageSize = () => {
 
             <!-- Table Menu -->
             <template v-if="currentComponent.type === 'TableUi'">
+              <t-form-item label="对齐方式">
+                <t-radio-group v-model="currentComponent.props.align" variant="default-filled" size="small">
+                  <t-radio-button value="left">居左</t-radio-button>
+                  <t-radio-button value="center">居中</t-radio-button>
+                  <t-radio-button value="right">居右</t-radio-button>
+                </t-radio-group>
+              </t-form-item>
+
+              <t-form-item label="字体加粗">
+                <t-switch v-model="currentComponent.props.isBold" />
+              </t-form-item>
+
+              <t-form-item label="文字字号">
+                <t-select v-model="currentComponent.props.fontSize">
+                  <t-option value="10px" label="10px" />
+                  <t-option value="11px" label="11px" />
+                  <t-option value="12px" label="12px (默认)" />
+                  <t-option value="13px" label="13px" />
+                  <t-option value="14px" label="14px" />
+                  <t-option value="16px" label="16px" />
+                </t-select>
+              </t-form-item>
+
               <t-form-item label="表格边框粗细">
                 <t-select v-model="currentComponent.props.borderStyle">
                   <t-option value="solid" label="实线" />

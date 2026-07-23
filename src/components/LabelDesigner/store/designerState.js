@@ -47,6 +47,9 @@ export const state = reactive({
       variable: { enable: false, textData: [] },
       props: {
         borderStyle: 'solid',
+        align: 'left',
+        isBold: false,
+        fontSize: '12px',
         columnWidths: [33.33, 33.33, 33.34],
         tableData: [
           { '生产日期': '2022-12-1', '产地': '湖北-武汉', '成分': '金子，钻石，翡翠' },
