@@ -15,14 +15,14 @@ const templatesList = ref([]);
 const selectedTemplateId = ref('');
 const printing = ref(false);
 
-/** @type {import('vue').Ref<'browser' | 'qz'>} */
-const printAdapter = ref('browser');
+/** @type {import('vue').Ref<'browser' | 'qz-html' | 'qz-image'>} */
+const printAdapter = ref('qz-html');
 const printerList = ref([]);
 const selectedPrinter = ref('');
 const qzConnecting = ref(false);
 const qzConnected = ref(false);
 const qzStatusText = computed(() => {
-  if (printAdapter.value !== 'qz') return '';
+  if (!printAdapter.value.startsWith('qz')) return '';
   if (qzConnecting.value) return '正在连接 QZ Tray…';
   if (qzConnected.value) return 'QZ Tray 已连接';
   return 'QZ Tray 未连接';
@@ -126,13 +126,13 @@ const refreshQzPrinters = async ({ silent = false } = {}) => {
 };
 
 watch(printAdapter, (val) => {
-  if (val === 'qz' && showPrintModal.value) {
+  if (val.startsWith('qz') && showPrintModal.value) {
     refreshQzPrinters({ silent: true });
   }
 });
 
 watch(showPrintModal, (open) => {
-  if (open && printAdapter.value === 'qz') {
+  if (open && printAdapter.value.startsWith('qz')) {
     refreshQzPrinters({ silent: true });
   }
 });
@@ -187,7 +187,7 @@ const handleConfirmPrint = async () => {
     MessagePlugin.warning('请至少选择一个设备');
     return;
   }
-  if (printAdapter.value === 'qz' && !selectedPrinter.value) {
+  if (printAdapter.value.startsWith('qz') && !selectedPrinter.value) {
     MessagePlugin.warning('请先选择打印机，或点击刷新连接 QZ Tray');
     return;
   }
@@ -202,7 +202,7 @@ const handleConfirmPrint = async () => {
       adapter: printAdapter.value,
       printer: selectedPrinter.value
     });
-    if (printAdapter.value === 'qz') {
+    if (printAdapter.value.startsWith('qz')) {
       MessagePlugin.success(`已通过 QZ Tray 发送 ${count} 张标签到「${selectedPrinter.value}」`);
     } else {
       MessagePlugin.success(`已打开打印对话框，共 ${count} 张标签`);
@@ -445,11 +445,12 @@ onMounted(() => {
             <div class="print-options">
               <span class="opt-label">打印方式</span>
               <t-radio-group v-model="printAdapter" variant="default-filled" size="small">
-                <t-radio-button value="browser">浏览器</t-radio-button>
-                <t-radio-button value="qz">QZ Tray</t-radio-button>
+                <t-radio-button value="qz-html">QZ Tray HTML (推荐 A42)</t-radio-button>
+                <t-radio-button value="qz-image">QZ Tray 位图</t-radio-button>
+                <t-radio-button value="browser">浏览器原生</t-radio-button>
               </t-radio-group>
 
-              <template v-if="printAdapter === 'qz'">
+              <template v-if="printAdapter.startsWith('qz')">
                 <span
                   class="qz-status"
                   :class="{ ok: qzConnected, busy: qzConnecting }"
@@ -472,6 +473,15 @@ onMounted(() => {
                 </t-button>
               </template>
             </div>
+
+            <t-alert v-if="printAdapter === 'qz-html'" theme="info" size="small" style="margin-top: 10px;">
+              <template #message>
+                <strong>💡 译维 A42 / 标签打印机排版提示：</strong><br />
+                1. 当前采用 <b>HTML 驱动渲染</b> 模式，精准进行矢量渲染与边界锁尺。<br />
+                2. <strong>关键步骤：</strong> 请在 Windows「控制面板 -> 设备和打印机 -> 译维 A42 打印首选项」中建立并选中与物理标签相符的规格（如 50×35mm），避免默认 A4 纸张高度导致连续走纸；<br />
+                3. 重新开机或换纸后，建议长按打印机进纸键完成缝隙/黑标学习。
+              </template>
+            </t-alert>
           </div>
           <div class="footer-btns">
             <t-button variant="outline" @click="showPrintModal = false">取消</t-button>

@@ -124,22 +124,134 @@ export async function renderLabelsToPages(jobs, options = {}) {
   return pages;
 }
 
+/** 1mm 对应约 3.779527559 个标准 CSS px (96 DPI / 25.4) */
+export const CSS_PX_PER_MM = 96 / 25.4;
+
+/**
+ * 为单页构造符合物理 mm 规格且具备 @page 锁尺度的完整 HTML 文档
+ * @param {{ html: string, width: number, height: number }} page
+ * @returns {string}
+ */
+export function buildPageHtml(page) {
+  const widthMm = page.width / PX_PER_MM;
+  const heightMm = page.height / PX_PER_MM;
+  const scale = CSS_PX_PER_MM / PX_PER_MM;
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>标签打印</title>
+  <style>
+    @page {
+      size: ${widthMm}mm ${heightMm}mm;
+      margin: 0;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: ${widthMm}mm;
+      height: ${heightMm}mm;
+      overflow: hidden;
+      background: #ffffff;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .print-label-page {
+      width: ${widthMm}mm;
+      height: ${heightMm}mm;
+      position: relative;
+      overflow: hidden;
+      background: #ffffff;
+      page-break-after: always;
+      break-after: page;
+    }
+    .print-label-page:last-child {
+      page-break-after: auto;
+      break-after: auto;
+    }
+    .print-label-inner {
+      width: ${page.width}px;
+      height: ${page.height}px;
+      transform: scale(${scale});
+      transform-origin: 0 0;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    ${PRINT_CSS}
+  </style>
+</head>
+<body>
+  <div class="print-label-page">
+    <div class="print-label-inner">
+      ${page.html}
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
 function buildPrintDocument(pages) {
-  const body = pages
-    .map(
-      (page) =>
-        `<div class="print-page" style="width:${page.width}px;height:${page.height}px;">${page.html}</div>`
-    )
+  if (!pages?.length) return '';
+  const firstPage = pages[0];
+  const widthMm = firstPage.width / PX_PER_MM;
+  const heightMm = firstPage.height / PX_PER_MM;
+  const scale = CSS_PX_PER_MM / PX_PER_MM;
+
+  const pagesBody = pages
+    .map((page) => {
+      const pageW = page.width / PX_PER_MM;
+      const pageH = page.height / PX_PER_MM;
+      return `<div class="print-label-page" style="width:${pageW}mm;height:${pageH}mm;">
+        <div class="print-label-inner" style="width:${page.width}px;height:${page.height}px;transform:scale(${scale});transform-origin:0 0;">
+          ${page.html}
+        </div>
+      </div>`;
+    })
     .join('\n');
 
   return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>打印标签</title>
-  <style>${PRINT_CSS}</style>
+  <title>标签打印</title>
+  <style>
+    @page {
+      size: ${widthMm}mm ${heightMm}mm;
+      margin: 0;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .print-label-page {
+      position: relative;
+      overflow: hidden;
+      background: #ffffff;
+      page-break-after: always;
+      break-after: page;
+    }
+    .print-label-page:last-child {
+      page-break-after: auto;
+      break-after: auto;
+    }
+    .print-label-inner {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    ${PRINT_CSS}
+  </style>
 </head>
-<body>${body}</body>
+<body>
+${pagesBody}
+</body>
 </html>`;
 }
 
@@ -235,11 +347,68 @@ async function browserPrint(pages) {
 }
 
 /**
- * QZ Tray 适配器：PNG pixel 打印
+ * QZ Tray 适配器：HTML 模式（推荐译维 A42 等 Windows 驱动打印机）
  * @param {Array<{ html: string, width: number, height: number }>} pages
  * @param {{ printer?: string }} options
  */
-async function qzPrint(pages, options = {}) {
+async function qzHtmlPrint(pages, options = {}) {
+  if (!pages?.length) {
+    throw makeError('EMPTY_PAGES', '没有可打印的标签');
+  }
+
+  await connectQz();
+
+  let printerName = options.printer;
+  if (!printerName) {
+    printerName = await getDefaultPrinter();
+  }
+  if (!printerName) {
+    throw makeError('QZ_NO_PRINTER', '未找到可用打印机，请先选择打印机');
+  }
+
+  for (let i = 0; i < pages.length; i++) {
+    const page = pages[i];
+    const widthMm = page.width / PX_PER_MM;
+    const heightMm = page.height / PX_PER_MM;
+    const htmlDoc = buildPageHtml(page);
+
+    const config = qz.configs.create(printerName, {
+      units: 'mm',
+      size: { width: widthMm, height: heightMm },
+      margins: 0,
+      colorType: 'grayscale',
+      interpolation: 'nearest-neighbor',
+      scaleContent: true,
+      jobName: `标签-${i + 1}/${pages.length}`
+    });
+
+    const data = [
+      {
+        type: 'pixel',
+        format: 'html',
+        flavor: 'plain',
+        data: htmlDoc
+      }
+    ];
+
+    try {
+      await qz.print(config, data);
+    } catch (e) {
+      throw makeError(
+        'QZ_PRINT_FAILED',
+        `第 ${i + 1} 张标签发送失败：${e?.message || e}`,
+        e
+      );
+    }
+  }
+}
+
+/**
+ * QZ Tray 适配器：PNG pixel 位图打印
+ * @param {Array<{ html: string, width: number, height: number }>} pages
+ * @param {{ printer?: string }} options
+ */
+async function qzImagePrint(pages, options = {}) {
   if (!pages?.length) {
     throw makeError('EMPTY_PAGES', '没有可打印的标签');
   }
@@ -265,7 +434,7 @@ async function qzPrint(pages, options = {}) {
       margins: 0,
       colorType: 'grayscale',
       interpolation: 'nearest-neighbor',
-      scaleContent: false,
+      scaleContent: true,
       jobName: `标签-${i + 1}/${images.length}`
     });
 
@@ -293,15 +462,18 @@ async function qzPrint(pages, options = {}) {
 /**
  * 统一打印入口
  * @param {Array<{ html: string, width: number, height: number }>} pages
- * @param {{ adapter?: 'browser' | 'qz', printer?: string }} options
+ * @param {{ adapter?: 'browser' | 'qz' | 'qz-html' | 'qz-image', printer?: string }} options
  */
 export async function printLabels(pages, options = {}) {
   const adapter = options.adapter || 'browser';
   if (adapter === 'browser') {
     return browserPrint(pages);
   }
-  if (adapter === 'qz') {
-    return qzPrint(pages, options);
+  if (adapter === 'qz' || adapter === 'qz-html') {
+    return qzHtmlPrint(pages, options);
+  }
+  if (adapter === 'qz-image') {
+    return qzImagePrint(pages, options);
   }
   throw makeError('UNKNOWN_ADAPTER', `未知打印适配器: ${adapter}`);
 }
