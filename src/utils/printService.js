@@ -17,11 +17,18 @@ import { connectQz, getDefaultPrinter, qz } from '@/utils/qzClient.js';
 export const PX_PER_MM = 5;
 
 const PRINT_CSS = `
-  * { box-sizing: border-box; }
+  * {
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: geometricPrecision;
+  }
   html, body {
     margin: 0;
     padding: 0;
     background: #fff;
+    color: #000000;
+    font-family: "SimHei", "Microsoft YaHei", "Arial", sans-serif;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -36,8 +43,9 @@ const PRINT_CSS = `
     page-break-after: auto;
     break-after: auto;
   }
-  .template-wrap { position: relative; overflow: hidden; background: #fff; }
-  .component { position: absolute; box-sizing: border-box; }
+  .template-wrap { position: relative; overflow: hidden; background: #fff; color: #000000; }
+  .component { position: absolute; box-sizing: border-box; color: #000000; }
+  .detail { color: #000000 !important; font-weight: 600; }
   .barcode-wrap {
     display: flex;
     align-items: center;
@@ -46,8 +54,8 @@ const PRINT_CSS = `
     width: 100%;
     height: 100%;
   }
-  .barcode { max-width: 100%; }
-  .barcode-text { font-size: 12px; font-weight: normal; text-align: center; margin: 2px 0 0 0; }
+  .barcode { max-width: 100%; filter: contrast(200%); }
+  .barcode-text { font-size: 13px; font-weight: bold; text-align: center; margin: 2px 0 0 0; color: #000000; }
   .qr-code-wrap {
     width: 100%;
     height: 100%;
@@ -55,10 +63,10 @@ const PRINT_CSS = `
     justify-content: center;
     align-items: center;
   }
-  .qr-code { max-width: 100%; max-height: 100%; }
+  .qr-code { max-width: 100%; max-height: 100%; filter: contrast(200%); }
   .x-line-wrap, .y-line-wrap, .rectangle-wrap { box-sizing: border-box; }
   .table-wrap { width: 100%; border-collapse: collapse; }
-  .table-wrap th, .table-wrap td { border: 1px solid #000; padding: 5px; text-align: left; }
+  .table-wrap th, .table-wrap td { border: 1px solid #000; padding: 5px; text-align: left; color: #000000; font-weight: 600; }
   @media print {
     @page { margin: 0; }
     body { margin: 0; }
@@ -261,7 +269,7 @@ export async function pagesToPngBase64(pages) {
       await sleep(50);
       const canvas = await html2canvas(wrap, {
         backgroundColor: '#ffffff',
-        scale: 2,
+        scale: 3,
         useCORS: true,
         allowTaint: false,
         width: page.width,
