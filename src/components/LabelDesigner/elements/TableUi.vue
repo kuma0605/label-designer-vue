@@ -196,7 +196,7 @@ const onColHandleClick = (e) => {
       ref="tableRef"
       class="w-100 table-wrap__table"
       border="0"
-      cellspacing="1px"
+      cellspacing="0"
       cellpadding="0"
     >
       <colgroup>
@@ -285,7 +285,6 @@ const onColHandleClick = (e) => {
         </tr>
       </tbody>
     </table>
-    <div class="table-wrap__place" />
   </div>
 </template>
 
@@ -306,18 +305,17 @@ const onColHandleClick = (e) => {
 }
 .table-wrap {
   width: 100%;
+  height: 100%;
   --table-border-color: #000;
   position: relative;
 
   &__table {
     width: 100%;
+    height: 100%;
     border-collapse: collapse;
     table-layout: fixed;
   }
 
-  &__place {
-    height: 30px;
-  }
   &__tr {
     position: relative;
   }

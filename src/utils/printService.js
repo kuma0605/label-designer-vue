@@ -66,7 +66,7 @@ const PRINT_CSS = `
   .qr-code { max-width: 100%; max-height: 100%; filter: contrast(200%); }
   .x-line-wrap, .y-line-wrap, .rectangle-wrap { box-sizing: border-box; }
   .table-wrap { width: 100%; border-collapse: collapse; }
-  .table-wrap th, .table-wrap td { border: 1px solid #000; padding: 5px; text-align: left; color: #000000; font-weight: 600; }
+  .table-wrap th, .table-wrap td { padding: 0; color: #000000; }
   @media print {
     @page { margin: 0; }
     body { margin: 0; }

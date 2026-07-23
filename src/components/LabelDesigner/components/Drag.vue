@@ -129,7 +129,7 @@ const resizeVisible = computed(() => {
 
 const dragStyle = computed(() => {
   const style = {
-    padding: isLine.value ? '0' : '0 10px 0 0',
+    padding: '0',
     overflow: isLine.value ? 'unset' : 'hidden',
   };
   if (x.value !== '') {
