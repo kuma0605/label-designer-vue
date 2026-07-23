@@ -5,6 +5,7 @@ import { MessagePlugin, DialogPlugin } from 'tdesign-vue-next';
 import {
   loadTemplatesFromStorage,
   saveTemplatesToStorage,
+  setDefaultTemplate,
   createId
 } from '@/utils/templateStore.js';
 
@@ -33,6 +34,28 @@ const loadTemplates = () => {
 
 const saveToLocal = () => {
   saveTemplatesToStorage(templatesList.value);
+};
+
+const handleSetDefault = (id, e) => {
+  e.stopPropagation();
+  templatesList.value = setDefaultTemplate(id);
+  MessagePlugin.success('已将该模板设为系统默认首选模板');
+};
+
+const handleCopyJson = (template, e) => {
+  e.stopPropagation();
+  const str = JSON.stringify(template, null, 2);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(str).then(() => {
+      MessagePlugin.success('已成功复制模板 JSON 配置到剪贴板！您可以随时发送给我更新后端代码。');
+    }).catch(() => {
+      console.log('Template JSON:', str);
+      MessagePlugin.info('复制失败，请在浏览器控制台中查看模板 JSON');
+    });
+  } else {
+    console.log('Template JSON:', str);
+    MessagePlugin.info('请在浏览器控制台中查看模板 JSON');
+  }
 };
 
 const isEditorDirty = () => {
@@ -168,12 +191,15 @@ onMounted(() => {
 
       <div class="templates-grid">
         <div
-          v-for="item in templatesList"
+          v-for="(item, index) in templatesList"
           :key="item.id"
           class="template-card"
           @click="handleEdit(item)"
         >
           <div class="card-preview">
+            <t-tag v-if="index === 0" theme="success" variant="light" style="position: absolute; top: 10px; left: 10px; z-index: 10;">
+              默认首选
+            </t-tag>
             <div class="mini-label-box" :style="getMiniLabelStyle(item.width, item.height)">
               <span class="preview-text">尺寸: {{ item.width / 5 }} x {{ item.height / 5 }} mm</span>
               <span class="preview-count">包含物料: {{ item.data?.length || 0 }} 个</span>
@@ -182,6 +208,19 @@ onMounted(() => {
           <div class="card-info">
             <div class="card-name">{{ item.name }}</div>
             <div class="card-actions">
+              <t-button
+                v-if="index !== 0"
+                variant="text"
+                theme="primary"
+                @click.stop="handleSetDefault(item.id, $event)"
+              >
+                <template #icon><t-icon name="check-circle" /></template>
+                设为默认
+              </t-button>
+              <t-button variant="text" theme="default" @click.stop="handleCopyJson(item, $event)">
+                <template #icon><t-icon name="file-copy" /></template>
+                复制JSON
+              </t-button>
               <t-button variant="text" theme="primary" @click.stop="handleEdit(item)">
                 <template #icon><t-icon name="edit" /></template>
                 编辑设计

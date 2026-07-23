@@ -95,8 +95,8 @@ export function loadTemplatesFromStorage(options = {}) {
         let updated = false;
         const normalized = list.map((tpl) => {
           const norm = normalizeTemplate(tpl);
-          // 如果用户使用的是预设默认模板但尺寸仍为旧的 250x175 (50x35mm)，自动迁移升级到 400x300 (80x60mm)
-          if (norm.id === 'asset-tag-default' && (norm.width === 250 || norm.height === 175)) {
+          // 自动同步/升级默认模板到 80x60mm 中医院固定资产标签
+          if (norm.id === 'asset-tag-default') {
             const seed = defaults.find((d) => d.id === 'asset-tag-default');
             if (seed) {
               updated = true;
@@ -123,4 +123,19 @@ export function loadTemplatesFromStorage(options = {}) {
 
 export function saveTemplatesToStorage(list) {
   localStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(list));
+}
+
+/**
+ * 将指定 ID 的模板设为系统首选默认模板（置顶）
+ */
+export function setDefaultTemplate(templateId) {
+  const list = loadTemplatesFromStorage();
+  const index = list.findIndex((t) => t.id === templateId);
+  if (index > -1) {
+    const [target] = list.splice(index, 1);
+    list.unshift(target);
+    saveTemplatesToStorage(list);
+    return list;
+  }
+  return list;
 }
