@@ -13,7 +13,7 @@
         "title": "自定义文本",
         "instance": true,
         "tag": "span",
-        "updateId": "1784796061178",
+        "updateId": "1784797045483",
         "position": {
           "clientX": 72.5,
           "clientY": 9.5
@@ -46,16 +46,16 @@
         "title": "列表",
         "instance": true,
         "tag": "div",
-        "updateId": "1784796061180",
+        "updateId": "1784797045484",
         "position": {
-          "clientX": 11,
-          "clientY": 54
+          "clientX": 5,
+          "clientY": 53
         },
         "default": {
           "height": 224,
           "width": 389,
-          "x": 11,
-          "y": 54
+          "x": 5,
+          "y": 53
         },
         "variable": {
           "enable": false,
@@ -102,16 +102,16 @@
         "title": "二维码",
         "instance": true,
         "tag": "img",
-        "updateId": "1784796061181",
+        "updateId": "1784797045484",
         "position": {
           "clientX": 281.5,
-          "clientY": 123.5
+          "clientY": 121.5
         },
         "default": {
-          "height": 112,
-          "width": 117,
+          "height": 109,
+          "width": 114,
           "x": 281.5,
-          "y": 123.5
+          "y": 121.5
         },
         "variable": {
           "enable": true,
@@ -134,15 +134,15 @@
         "title": "矩形",
         "instance": true,
         "tag": "div",
-        "updateId": "1784796061181",
+        "updateId": "1784797071988",
         "position": {
-          "clientX": 282.5,
+          "clientX": 286.5,
           "clientY": 121.5
         },
         "default": {
-          "height": 110,
+          "height": 115,
           "width": 106,
-          "x": 282.5,
+          "x": 286.5,
           "y": 121.5
         },
         "props": {
