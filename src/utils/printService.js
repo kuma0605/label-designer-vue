@@ -428,6 +428,7 @@ async function qzImagePrint(pages, options = {}) {
   // 逐张打印，保证每张使用对应标签尺寸
   for (let i = 0; i < images.length; i++) {
     const img = images[i];
+
     const config = qz.configs.create(printerName, {
       units: 'mm',
       size: { width: img.widthMm, height: img.heightMm },
@@ -435,7 +436,6 @@ async function qzImagePrint(pages, options = {}) {
       colorType: 'grayscale',
       interpolation: 'nearest-neighbor',
       scaleContent: true,
-      rasterize: true,
       jobName: `标签-${i + 1}/${images.length}`
     });
 
