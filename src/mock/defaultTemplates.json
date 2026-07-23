@@ -1,9 +1,9 @@
 [
   {
     "id": "asset-tag-default",
-    "name": "资产管理常规标签",
-    "width": 250,
-    "height": 175,
+    "name": "资产管理标准标签 (80×60mm)",
+    "width": 400,
+    "height": 300,
     "data": [
       {
         "id": "el_title-text-0",
@@ -11,14 +11,14 @@
         "type": "TextUi",
         "title": "固定资产标签",
         "instance": true,
-        "position": { "clientX": 10, "clientY": 6 },
-        "default": { "width": 230, "height": 22, "x": 10, "y": 6 },
+        "position": { "clientX": 15, "clientY": 12 },
+        "default": { "width": 370, "height": 28, "x": 15, "y": 12 },
         "variable": { "enable": false, "textData": [] },
         "props": {
           "text": "固定资产设备卡片",
           "align": "center",
           "fontFamily": "",
-          "fontSize": "14px",
+          "fontSize": "16px",
           "lineHeight": "1.4",
           "isBold": true,
           "hasBorder": false
@@ -30,10 +30,10 @@
         "type": "XLineUi",
         "title": "分隔线",
         "instance": true,
-        "position": { "clientX": 10, "clientY": 30 },
-        "default": { "width": 230, "height": 1, "x": 10, "y": 30 },
+        "position": { "clientX": 15, "clientY": 46 },
+        "default": { "width": 370, "height": 1, "x": 15, "y": 46 },
         "variable": { "enable": false, "textData": [] },
-        "props": { "width": 230, "height": 1, "lineType": "solid" }
+        "props": { "width": 370, "height": 1, "lineType": "solid" }
       },
       {
         "id": "el_asset-num-var",
@@ -41,14 +41,14 @@
         "type": "TextUi",
         "title": "资产编号",
         "instance": true,
-        "position": { "clientX": 10, "clientY": 36 },
-        "default": { "width": 145, "height": 18, "x": 10, "y": 36 },
+        "position": { "clientX": 15, "clientY": 58 },
+        "default": { "width": 230, "height": 22, "x": 15, "y": 58 },
         "variable": { "enable": true, "textData": [] },
         "props": {
           "text": "资产编号：${asset_num}",
           "align": "left",
           "fontFamily": "",
-          "fontSize": "11px",
+          "fontSize": "12px",
           "lineHeight": "1.3",
           "isBold": false,
           "hasBorder": false
@@ -60,14 +60,33 @@
         "type": "TextUi",
         "title": "资产名称",
         "instance": true,
-        "position": { "clientX": 10, "clientY": 56 },
-        "default": { "width": 145, "height": 18, "x": 10, "y": 56 },
+        "position": { "clientX": 15, "clientY": 88 },
+        "default": { "width": 230, "height": 22, "x": 15, "y": 88 },
         "variable": { "enable": true, "textData": [] },
         "props": {
           "text": "设备名称：${asset_name}",
           "align": "left",
           "fontFamily": "",
-          "fontSize": "11px",
+          "fontSize": "12px",
+          "lineHeight": "1.3",
+          "isBold": false,
+          "hasBorder": false
+        }
+      },
+      {
+        "id": "el_asset-spec-var",
+        "name": "customText",
+        "type": "TextUi",
+        "title": "规格型号",
+        "instance": true,
+        "position": { "clientX": 15, "clientY": 118 },
+        "default": { "width": 230, "height": 22, "x": 15, "y": 118 },
+        "variable": { "enable": true, "textData": [] },
+        "props": {
+          "text": "规格型号：${specification}",
+          "align": "left",
+          "fontFamily": "",
+          "fontSize": "12px",
           "lineHeight": "1.3",
           "isBold": false,
           "hasBorder": false
@@ -79,14 +98,14 @@
         "type": "TextUi",
         "title": "使用部门",
         "instance": true,
-        "position": { "clientX": 10, "clientY": 76 },
-        "default": { "width": 145, "height": 18, "x": 10, "y": 76 },
+        "position": { "clientX": 15, "clientY": 148 },
+        "default": { "width": 230, "height": 22, "x": 15, "y": 148 },
         "variable": { "enable": true, "textData": [] },
         "props": {
-          "text": "部门：${use_dept}",
+          "text": "使用部门：${use_dept}",
           "align": "left",
           "fontFamily": "",
-          "fontSize": "11px",
+          "fontSize": "12px",
           "lineHeight": "1.3",
           "isBold": false,
           "hasBorder": false
@@ -98,14 +117,14 @@
         "type": "BarcodeUi",
         "title": "条码",
         "instance": true,
-        "position": { "clientX": 10, "clientY": 100 },
-        "default": { "width": 145, "height": 58, "x": 10, "y": 100 },
+        "position": { "clientX": 15, "clientY": 182 },
+        "default": { "width": 230, "height": 95, "x": 15, "y": 182 },
         "variable": { "enable": true, "textData": [] },
         "props": {
           "format": "CODE128",
-          "lineWidth": 1.5,
-          "bodyHeight": 32,
-          "fontSize": 10,
+          "lineWidth": 1.8,
+          "bodyHeight": 55,
+          "fontSize": 12,
           "displayValue": "1",
           "data": "${barcode_code}"
         }
@@ -116,12 +135,31 @@
         "type": "QrCodeUi",
         "title": "二维码",
         "instance": true,
-        "position": { "clientX": 165, "clientY": 40 },
-        "default": { "width": 75, "height": 75, "x": 165, "y": 40 },
+        "position": { "clientX": 260, "clientY": 60 },
+        "default": { "width": 125, "height": 125, "x": 260, "y": 60 },
         "variable": { "enable": true, "textData": [] },
         "props": {
           "data": "${qr_code}",
-          "options": { "margin": 1, "scale": 3, "errorCorrectionLevel": "H" }
+          "options": { "margin": 1, "scale": 4, "errorCorrectionLevel": "H" }
+        }
+      },
+      {
+        "id": "el_asset-place-var",
+        "name": "customText",
+        "type": "TextUi",
+        "title": "存放地点",
+        "instance": true,
+        "position": { "clientX": 260, "clientY": 195 },
+        "default": { "width": 125, "height": 60, "x": 260, "y": 195 },
+        "variable": { "enable": true, "textData": [] },
+        "props": {
+          "text": "存放地点：\n${storage_place}",
+          "align": "left",
+          "fontFamily": "",
+          "fontSize": "11px",
+          "lineHeight": "1.3",
+          "isBold": false,
+          "hasBorder": true
         }
       }
     ]

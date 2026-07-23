@@ -8,18 +8,19 @@ const activeTab = ref('style');
 
 // Page sizes definition
 const formPage = ref({
-  width: 50,
-  height: 35,
-  pageName: 'label-5035'
+  width: 80,
+  height: 60,
+  pageName: 'label-8060'
 });
 
 // 约定：1mm = 5px（编辑折中比例）
 const pageSizeOptions = [
-  { label: '标签纸 40×30 mm', value: 'label-4030', size: [200, 150] },
+  { label: '标签纸 80×60 mm (推荐)', value: 'label-8060', size: [400, 300] },
   { label: '标签纸 50×35 mm', value: 'label-5035', size: [250, 175] },
+  { label: '标签纸 40×30 mm', value: 'label-4030', size: [200, 150] },
   { label: '标签纸 60×40 mm', value: 'label-6040', size: [300, 200] },
   { label: '标签纸 80×50 mm', value: 'label-8050', size: [400, 250] },
-  { label: '自定义尺寸', value: 'custom', size: [250, 175] }
+  { label: '自定义尺寸', value: 'custom', size: [400, 300] }
 ];
 
 const lineOptions = [

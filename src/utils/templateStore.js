@@ -66,10 +66,10 @@ export function normalizeTemplate(tpl) {
     next.name = '未命名模板';
   }
   if (!next.width) {
-    next.width = 250;
+    next.width = 400;
   }
   if (!next.height) {
-    next.height = 175;
+    next.height = 300;
   }
   next.data = Array.isArray(next.data) ? next.data.map(normalizeElement) : [];
   return next;
@@ -80,25 +80,41 @@ export function getDefaultTemplates() {
 }
 
 /**
- * 从 localStorage 读模板；没有则用 mock JSON 种子
+ * 从 localStorage 读模板；没有则用 mock JSON 种子；若存在旧的 250×175 种子模板则升级到 80×60mm (400×300)
  * @param {{ persistSeed?: boolean }} options
  */
 export function loadTemplatesFromStorage(options = {}) {
   const persistSeed = options.persistSeed !== false;
   const raw = localStorage.getItem(TEMPLATES_STORAGE_KEY);
+  const defaults = getDefaultTemplates();
 
   if (raw) {
     try {
       const list = JSON.parse(raw);
       if (Array.isArray(list) && list.length > 0) {
-        return list.map(normalizeTemplate);
+        let updated = false;
+        const normalized = list.map((tpl) => {
+          const norm = normalizeTemplate(tpl);
+          // 如果用户使用的是预设默认模板但尺寸仍为旧的 250x175 (50x35mm)，自动迁移升级到 400x300 (80x60mm)
+          if (norm.id === 'asset-tag-default' && (norm.width === 250 || norm.height === 175)) {
+            const seed = defaults.find((d) => d.id === 'asset-tag-default');
+            if (seed) {
+              updated = true;
+              return structuredClone(seed);
+            }
+          }
+          return norm;
+        });
+        if (updated && persistSeed) {
+          saveTemplatesToStorage(normalized);
+        }
+        return normalized;
       }
     } catch (e) {
       console.error('解析本地模板失败，回退到默认模板:', e);
     }
   }
 
-  const defaults = getDefaultTemplates();
   if (persistSeed) {
     saveTemplatesToStorage(defaults);
   }

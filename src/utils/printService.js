@@ -129,13 +129,13 @@ export const CSS_PX_PER_MM = 96 / 25.4;
 
 /**
  * 为单页构造符合物理 mm 规格且具备 @page 锁尺度的完整 HTML 文档
+ * 使用 CSS calc(${widthMm}mm / ${page.width}px) 消除 203DPI/300DPI 打印机与 96DPI 视口的 DPI 偏差
  * @param {{ html: string, width: number, height: number }} page
  * @returns {string}
  */
 export function buildPageHtml(page) {
   const widthMm = page.width / PX_PER_MM;
   const heightMm = page.height / PX_PER_MM;
-  const scale = CSS_PX_PER_MM / PX_PER_MM;
 
   return `<!DOCTYPE html>
 <html>
@@ -174,7 +174,7 @@ export function buildPageHtml(page) {
     .print-label-inner {
       width: ${page.width}px;
       height: ${page.height}px;
-      transform: scale(${scale});
+      transform: scale(calc(${widthMm}mm / ${page.width}px));
       transform-origin: 0 0;
       position: absolute;
       top: 0;
@@ -198,14 +198,13 @@ function buildPrintDocument(pages) {
   const firstPage = pages[0];
   const widthMm = firstPage.width / PX_PER_MM;
   const heightMm = firstPage.height / PX_PER_MM;
-  const scale = CSS_PX_PER_MM / PX_PER_MM;
 
   const pagesBody = pages
     .map((page) => {
       const pageW = page.width / PX_PER_MM;
       const pageH = page.height / PX_PER_MM;
       return `<div class="print-label-page" style="width:${pageW}mm;height:${pageH}mm;">
-        <div class="print-label-inner" style="width:${page.width}px;height:${page.height}px;transform:scale(${scale});transform-origin:0 0;">
+        <div class="print-label-inner" style="width:${page.width}px;height:${page.height}px;transform:scale(calc(${pageW}mm / ${page.width}px));transform-origin:0 0;">
           ${page.html}
         </div>
       </div>`;
@@ -379,6 +378,7 @@ async function qzHtmlPrint(pages, options = {}) {
       colorType: 'grayscale',
       interpolation: 'nearest-neighbor',
       scaleContent: true,
+      rasterize: true,
       jobName: `标签-${i + 1}/${pages.length}`
     });
 
@@ -435,6 +435,7 @@ async function qzImagePrint(pages, options = {}) {
       colorType: 'grayscale',
       interpolation: 'nearest-neighbor',
       scaleContent: true,
+      rasterize: true,
       jobName: `标签-${i + 1}/${images.length}`
     });
 

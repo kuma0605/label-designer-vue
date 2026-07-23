@@ -19,8 +19,8 @@ export const state = reactive({
     left: ''
   },
   page: {
-    width: 250,
-    height: 175
+    width: 400,
+    height: 300
   },
   board: {
     x: '',
