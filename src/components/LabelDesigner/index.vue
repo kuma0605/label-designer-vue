@@ -45,6 +45,20 @@ const emit = defineEmits(['update:modelValue', 'save', 'print']);
 const _isSyncingFromParent = ref(false);
 const printing = ref(false);
 
+let syncUnlockTimer = null;
+
+const lockSyncFromParent = () => {
+  _isSyncingFromParent.value = true;
+  if (syncUnlockTimer) {
+    clearTimeout(syncUnlockTimer);
+  }
+  // 与 updateStoreList 的 storeLoading(300ms) 对齐，避免初始化回写把父级脏检查弄脏
+  syncUnlockTimer = setTimeout(() => {
+    _isSyncingFromParent.value = false;
+    syncUnlockTimer = null;
+  }, 320);
+};
+
 // Watch modelValue from parent → 加载到内部 store
 watch(
   () => props.modelValue,
@@ -52,13 +66,11 @@ watch(
     if (!newVal) return;
     // 仅当外部数据与内部 store 不一致时才重新加载，避免内部更新回写时再触发
     if (newVal.data && JSON.stringify(newVal.data) !== JSON.stringify(state.storeList)) {
-      _isSyncingFromParent.value = true;
+      lockSyncFromParent();
       actions.updateStoreList(newVal.data);
       if (newVal.width && newVal.height) {
         actions.setPageSize(newVal.width, newVal.height);
       }
-      // 下一个微任务后解除标志，让内部操作恢复正常同步
-      Promise.resolve().then(() => { _isSyncingFromParent.value = false; });
     } else if (newVal.width && newVal.height) {
       actions.setPageSize(newVal.width, newVal.height);
     }

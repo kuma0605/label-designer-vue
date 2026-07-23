@@ -159,8 +159,16 @@ export const actions = {
       if (!active.variable) {
         active.variable = { enable: false, textData: [] };
       }
+      const enable = value.some((item) => item.key);
+      // 派生字段无变化时不写回，避免误触发脏检查
+      if (
+        active.variable.enable === enable &&
+        JSON.stringify(active.variable.textData) === JSON.stringify(value)
+      ) {
+        return;
+      }
       active.variable.textData = value;
-      active.variable.enable = value.some((item) => item.key);
+      active.variable.enable = enable;
     }
   },
 

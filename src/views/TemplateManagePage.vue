@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, nextTick } from 'vue';
 import LabelDesigner from '../components/LabelDesigner/index.vue';
 import { MessagePlugin, DialogPlugin } from 'tdesign-vue-next';
 import {
@@ -25,6 +25,7 @@ const variables = ref([
 const activeTemplate = ref(null);
 const templatesList = ref([]);
 const editSnapshot = ref('');
+let snapshotTimer = null;
 
 const loadTemplates = () => {
   templatesList.value = loadTemplatesFromStorage();
@@ -35,26 +36,43 @@ const saveToLocal = () => {
 };
 
 const isEditorDirty = () => {
-  if (!activeTemplate.value) return false;
+  // 设计器初始化回写完成前不视为脏，避免误报
+  if (!activeTemplate.value || !editSnapshot.value) return false;
   return JSON.stringify(activeTemplate.value) !== editSnapshot.value;
+};
+
+/** 等 LabelDesigner 完成 normalize / v-model 回写后再拍快照 */
+const captureSnapshotAfterReady = async () => {
+  if (snapshotTimer) {
+    clearTimeout(snapshotTimer);
+    snapshotTimer = null;
+  }
+  editSnapshot.value = '';
+  await nextTick();
+  snapshotTimer = setTimeout(() => {
+    if (activeTemplate.value && currentView.value === 'editor') {
+      editSnapshot.value = JSON.stringify(activeTemplate.value);
+    }
+    snapshotTimer = null;
+  }, 350);
 };
 
 const handleEdit = (template) => {
   activeTemplate.value = JSON.parse(JSON.stringify(template));
-  editSnapshot.value = JSON.stringify(activeTemplate.value);
   currentView.value = 'editor';
+  captureSnapshotAfterReady();
 };
 
 const handleCreate = () => {
   activeTemplate.value = {
     id: createId('tpl'),
     name: '新建自定义模板',
-    width: 250,
-    height: 175,
+    width: 400,
+    height: 300,
     data: []
   };
-  editSnapshot.value = JSON.stringify(activeTemplate.value);
   currentView.value = 'editor';
+  captureSnapshotAfterReady();
 };
 
 const handleDelete = (id, e) => {
@@ -91,6 +109,10 @@ const handleSave = (savedTpl) => {
 };
 
 const leaveEditor = () => {
+  if (snapshotTimer) {
+    clearTimeout(snapshotTimer);
+    snapshotTimer = null;
+  }
   currentView.value = 'dashboard';
   activeTemplate.value = null;
   editSnapshot.value = '';
