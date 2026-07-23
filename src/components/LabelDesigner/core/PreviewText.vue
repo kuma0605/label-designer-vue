@@ -16,11 +16,16 @@ const textStyle = computed(() => {
 
 // 渲染文本：将 ${key} 占位符替换为真实数据
 const renderedHtml = computed(() => {
-  const { variable, props: cProps } = props.component;
-  const vars = props.variables;
+  const { variable, props: cProps = {} } = props.component || {};
+  const vars = props.variables || {};
 
-  // 有变量标记的组件：按 textData 分段渲染
-  if (variable && variable.enable && variable.textData) {
+  // 有变量标记且 textData 数组非空：按 textData 分段渲染
+  if (
+    variable &&
+    variable.enable &&
+    Array.isArray(variable.textData) &&
+    variable.textData.length > 0
+  ) {
     return variable.textData
       .map((item) => {
         if (item.key && vars[item.key] !== undefined) {
@@ -30,17 +35,19 @@ const renderedHtml = computed(() => {
         // 无真实值 → 显示占位符字面量
         return `<span class="var-placeholder">${escapeHtml(item.value || '')}</span>`;
       })
-      .join('');
+      .join('')
+      .replace(/\n/g, '<br/>');
   }
 
-  // 无变量标记的纯文本：直接替换其中可能存在的 ${...}
+  // 纯文本或 textData 为空的情况：直接对 text / data 执行 replaceVars 替换
   const raw = cProps.text || cProps.data || '';
   const replaced = replaceVars(raw, vars);
-  return escapeHtml(replaced);
+  return escapeHtml(replaced).replace(/\n/g, '<br/>');
 });
 
 function escapeHtml(str) {
-  return str
+  if (!str) return '';
+  return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
