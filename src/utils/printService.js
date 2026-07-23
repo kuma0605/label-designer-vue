@@ -164,12 +164,8 @@ export function buildPageHtml(page) {
       position: relative;
       overflow: hidden;
       background: #ffffff;
-      page-break-after: always;
-      break-after: page;
-    }
-    .print-label-page:last-child {
-      page-break-after: auto;
-      break-after: auto;
+      page-break-after: avoid !important;
+      break-after: avoid !important;
     }
     .print-label-inner {
       width: ${page.width}px;
@@ -183,13 +179,7 @@ export function buildPageHtml(page) {
     ${PRINT_CSS}
   </style>
 </head>
-<body>
-  <div class="print-label-page">
-    <div class="print-label-inner">
-      ${page.html}
-    </div>
-  </div>
-</body>
+<body><div class="print-label-page"><div class="print-label-inner">${page.html}</div></div></body>
 </html>`;
 }
 
@@ -203,13 +193,9 @@ function buildPrintDocument(pages) {
     .map((page) => {
       const pageW = page.width / PX_PER_MM;
       const pageH = page.height / PX_PER_MM;
-      return `<div class="print-label-page" style="width:${pageW}mm;height:${pageH}mm;">
-        <div class="print-label-inner" style="width:${page.width}px;height:${page.height}px;transform:scale(calc(${pageW}mm / ${page.width}px));transform-origin:0 0;">
-          ${page.html}
-        </div>
-      </div>`;
+      return `<div class="print-label-page" style="width:${pageW}mm;height:${pageH}mm;"><div class="print-label-inner" style="width:${page.width}px;height:${page.height}px;transform:scale(calc(${pageW}mm / ${page.width}px));transform-origin:0 0;">${page.html}</div></div>`;
     })
-    .join('\n');
+    .join('');
 
   return `<!DOCTYPE html>
 <html>
@@ -237,8 +223,8 @@ function buildPrintDocument(pages) {
       break-after: page;
     }
     .print-label-page:last-child {
-      page-break-after: auto;
-      break-after: auto;
+      page-break-after: avoid !important;
+      break-after: avoid !important;
     }
     .print-label-inner {
       position: absolute;
@@ -248,9 +234,7 @@ function buildPrintDocument(pages) {
     ${PRINT_CSS}
   </style>
 </head>
-<body>
-${pagesBody}
-</body>
+<body>${pagesBody}</body>
 </html>`;
 }
 
@@ -282,6 +266,10 @@ export async function pagesToPngBase64(pages) {
         allowTaint: false,
         width: page.width,
         height: page.height,
+        x: 0,
+        y: 0,
+        scrollX: 0,
+        scrollY: 0,
         logging: false
       });
 
