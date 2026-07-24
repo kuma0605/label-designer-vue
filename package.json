@@ -11,6 +11,7 @@
   "dependencies": {
     "html2canvas": "^1.4.1",
     "jsbarcode": "^3.12.3",
+    "jsrsasign": "^11.1.3",
     "lodash": "^4.18.1",
     "qrcode": "^1.5.4",
     "qz-tray": "^2.2.6",

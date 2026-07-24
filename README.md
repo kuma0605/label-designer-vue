@@ -49,11 +49,11 @@ npm run build
 1. 安装并启动 [QZ Tray](https://qz.io/download)
 2. 打开「设备资产管理」→ 勾选设备 → 批量打印
 3. 打印方式选 **QZ Tray** → 刷新打印机 → 选择打印机 → 确认打印
-4. 首次连接会弹授权框，点 **Allow**（可勾选 Remember）
+4. 未配置证书时首次会弹授权框，点 **Allow**（可勾选 Remember）
 
 无标签机时可用系统 PDF 打印机验证内容与尺寸。
 
-静默打印（去掉授权弹窗）需配置证书，见 [`public/certs/README.md`](public/certs/README.md)。
+静默打印：把 QZ Demo 的 `digital-certificate.txt` + `private-key.pem` 放到 [`public/certs/`](public/certs/README.md)，前端会自动签名，不再弹窗。
 
 ---
 
