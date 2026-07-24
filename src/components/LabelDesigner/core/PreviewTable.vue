@@ -21,10 +21,9 @@ const cellTextStyle = computed(() => ({
   textAlign: align.value || 'left',
   fontWeight: isBold.value ? 'bold' : 'normal',
   fontSize: formattedFontSize.value,
-  // 避免继承打印弹窗 / TDesign 的 line-height:22px、PingFang，否则行高被撑高、绝对定位矩形上移
+  // 跨平台统一度量：避免 Mac SF / Win Segoe / 弹窗 PingFang 行高不一致
   lineHeight: 'normal',
-  fontFamily:
-    "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+  fontFamily: 'Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif'
 }));
 
 const tableData = computed(() => {
@@ -112,7 +111,7 @@ const columnWidths = computed(() => {
   --table-border-color: #000;
   position: relative;
   line-height: normal;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
 }
 
 .preview-table-wrap :deep(.table-wrap__table) {
@@ -122,20 +121,31 @@ const columnWidths = computed(() => {
   table-layout: fixed;
 }
 
+.preview-table-wrap :deep(th),
+.preview-table-wrap :deep(td) {
+  height: 100%;
+  padding: 0;
+  vertical-align: top;
+}
+
 .preview-table-wrap :deep(th p) {
   margin: 0;
   min-width: 30px;
   outline: none;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: normal;
 }
 
 .preview-table-wrap :deep(.table-wrap__th) {
+  height: 100%;
+  box-sizing: border-box;
   padding: 6px 10px;
   position: relative;
   border: 1px var(--table-border-style) var(--table-border-color);
   border-right: 0;
   background-color: #fafafa;
+  line-height: normal;
 }
 
 .preview-table-wrap :deep(th:last-child .table-wrap__th) {
@@ -149,14 +159,18 @@ const columnWidths = computed(() => {
   outline: none;
   overflow: hidden;
   word-break: break-all;
+  line-height: normal;
 }
 
 .preview-table-wrap :deep(.table-wrap__td) {
+  height: 100%;
+  box-sizing: border-box;
   padding: 6px 10px;
   position: relative;
   border: 1px var(--table-border-style) var(--table-border-color);
   border-top: 0;
   border-right: 0;
+  line-height: normal;
 }
 
 .preview-table-wrap :deep(td:last-child .table-wrap__td) {

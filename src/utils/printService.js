@@ -45,7 +45,7 @@ const PRINT_CSS = `
   }
   .template-wrap { position: relative; overflow: hidden; background: #fff; color: #000000; }
   .component { position: absolute; box-sizing: border-box; color: #000000; }
-  .detail { color: #000000 !important; font-weight: 600; }
+  .detail { color: #000000 !important; font-weight: 600; font-family: "SimHei", "Microsoft YaHei", "Arial", sans-serif; }
   .barcode-wrap {
     display: flex;
     align-items: center;
@@ -55,7 +55,14 @@ const PRINT_CSS = `
     height: 100%;
   }
   .barcode { max-width: 100%; filter: contrast(200%); }
-  .barcode-text { font-size: 13px; font-weight: bold; text-align: center; margin: 2px 0 0 0; color: #000000; }
+  .barcode-text {
+    font-size: 13px;
+    font-weight: bold;
+    text-align: center;
+    margin: 2px 0 0 0;
+    color: #000000;
+    font-family: "SimHei", "Microsoft YaHei", "Arial", sans-serif;
+  }
   .qr-code-wrap {
     width: 100%;
     height: 100%;
@@ -65,28 +72,45 @@ const PRINT_CSS = `
   }
   .qr-code { max-width: 100%; max-height: 100%; filter: contrast(200%); }
   .x-line-wrap, .y-line-wrap, .rectangle-wrap { box-sizing: border-box; }
-  .table-wrap { width: 100%; height: 100%; position: relative; line-height: normal; }
+  .table-wrap {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    line-height: normal;
+    font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  }
   .table-wrap__table {
     width: 100%;
     height: 100%;
     border-collapse: collapse;
     table-layout: fixed;
   }
-  .table-wrap th, .table-wrap td { padding: 0; color: #000000; vertical-align: middle; line-height: normal; }
+  .table-wrap th, .table-wrap td {
+    padding: 0;
+    height: 100%;
+    color: #000000;
+    vertical-align: top;
+    line-height: normal;
+    font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  }
   .table-wrap th p {
     margin: 0;
     min-width: 30px;
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: normal;
+    font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
   }
   .table-wrap__th {
+    height: 100%;
+    box-sizing: border-box;
     padding: 6px 10px;
     position: relative;
     border: 1px var(--table-border-style, solid) #000;
     border-right: 0;
     background-color: #fafafa;
     line-height: normal;
+    font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
   }
   .table-wrap th:last-child .table-wrap__th { border-right: 1px var(--table-border-style, solid) #000; }
   .table-wrap td span {
@@ -96,14 +120,18 @@ const PRINT_CSS = `
     overflow: hidden;
     word-break: break-all;
     line-height: normal;
+    font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
   }
   .table-wrap__td {
+    height: 100%;
+    box-sizing: border-box;
     padding: 6px 10px;
     position: relative;
     border: 1px var(--table-border-style, solid) #000;
     border-top: 0;
     border-right: 0;
     line-height: normal;
+    font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
   }
   .table-wrap td:last-child .table-wrap__td { border-right: 1px var(--table-border-style, solid) #000; }
   @media print {

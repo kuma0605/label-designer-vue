@@ -7,6 +7,15 @@ import defaultTemplatesSeed from '@/mock/defaultTemplates.json';
 
 export const TEMPLATES_STORAGE_KEY = 'label_templates_v3';
 
+/** 默认模板 id（历史 asset-tag-default + 当前种子 id） */
+const SEED_TEMPLATE_IDS = new Set(['asset-tag-default', 'tpl_xqu324m9']);
+
+/**
+ * 种子版本：仅用于「旧尺寸 / 缺版本」一次性迁移。
+ * 不要在每次改 defaultTemplates.json 时依赖它强推覆盖用户已编辑副本。
+ */
+export const SEED_VERSION = 1;
+
 /** 设计器打印预览用的示例变量（非真实设备） */
 export const SAMPLE_PRINT_VARIABLES = {
   asset_num: 'ZC-2026-0001',
@@ -76,11 +85,26 @@ export function normalizeTemplate(tpl) {
 }
 
 export function getDefaultTemplates() {
-  return defaultTemplatesSeed.map((tpl) => normalizeTemplate(structuredClone(tpl)));
+  return defaultTemplatesSeed.map((tpl) => {
+    const next = normalizeTemplate(structuredClone(tpl));
+    next.seedVersion = SEED_VERSION;
+    return next;
+  });
+}
+
+function isLegacyDefaultSize(tpl) {
+  return Number(tpl?.width) === 250 && Number(tpl?.height) === 175;
+}
+
+function needsSeedContentReplace(tpl) {
+  if (!SEED_TEMPLATE_IDS.has(tpl?.id)) return false;
+  // 仅旧 250×175 画布强制换成当前种子；已是 80×60 的用户编辑予以保留
+  return isLegacyDefaultSize(tpl);
 }
 
 /**
- * 从 localStorage 读模板；没有则用 mock JSON 种子；若存在旧的 250×175 种子模板则升级到 80×60mm (400×300)
+ * 从 localStorage 读模板；没有则用 mock JSON 种子。
+ * 仅对默认模板做「旧 250×175」内容升级；不再每次加载覆盖用户保存。
  * @param {{ persistSeed?: boolean }} options
  */
 export function loadTemplatesFromStorage(options = {}) {
@@ -95,13 +119,17 @@ export function loadTemplatesFromStorage(options = {}) {
         let updated = false;
         const normalized = list.map((tpl) => {
           const norm = normalizeTemplate(tpl);
-          // 自动同步/升级默认模板到 80x60mm 中医院固定资产标签
-          if (norm.id === 'asset-tag-default' || norm.id === 'tpl_xqu324m9') {
+          if (needsSeedContentReplace(norm)) {
             const seed = defaults[0];
             if (seed) {
               updated = true;
-              return { ...structuredClone(seed), id: norm.id };
+              return { ...structuredClone(seed), id: norm.id, seedVersion: SEED_VERSION };
             }
+          }
+          // 给已存在的默认模板补上 seedVersion，不改动内容
+          if (SEED_TEMPLATE_IDS.has(norm.id) && norm.seedVersion == null) {
+            updated = true;
+            return { ...norm, seedVersion: SEED_VERSION };
           }
           return norm;
         });

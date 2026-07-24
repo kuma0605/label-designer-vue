@@ -4,6 +4,7 @@
     "name": "中医院模版 (80×60mm)",
     "width": 400,
     "height": 300,
+    "seedVersion": 1,
     "data": [
       {
         "name": "customText",

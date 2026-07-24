@@ -60,9 +60,19 @@ const formattedFontSize = computed(() => {
 
 const getItemStyle = computed(() => {
   return {
-    '--table-border-style': props.borderStyle || 'solid'
+    '--table-border-style': props.borderStyle || 'solid',
+    fontFamily: 'Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif',
+    lineHeight: 'normal'
   };
 });
+
+const cellTextStyle = computed(() => ({
+  textAlign: props.align || 'left',
+  fontWeight: props.isBold ? 'bold' : 'normal',
+  fontSize: formattedFontSize.value,
+  lineHeight: 'normal',
+  fontFamily: 'Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif'
+}));
 
 const columns = computed(() => {
   if (!props.tableData?.length) return [];
@@ -212,7 +222,7 @@ const onColHandleClick = (e) => {
             <div class="table-wrap__th">
               <p
                 contenteditable="true"
-                :style="{ textAlign: align || 'left', fontWeight: isBold ? 'bold' : 'normal', fontSize: formattedFontSize }"
+                :style="cellTextStyle"
                 @blur="onKeyChange($event, key)"
               >{{ key }}</p>
               <!-- 非末列：拖拽改宽；选中时单击仍可打开插删列菜单 -->
@@ -264,7 +274,7 @@ const onColHandleClick = (e) => {
             <div class="table-wrap__td">
               <span
                 contenteditable="true"
-                :style="{ textAlign: align || 'left', fontWeight: isBold ? 'bold' : 'normal', fontSize: formattedFontSize }"
+                :style="cellTextStyle"
                 @blur="onValueChange($event, itemKey, index)"
               >{{ item[itemKey] }}</span>
               <t-popup
@@ -308,6 +318,8 @@ const onColHandleClick = (e) => {
   height: 100%;
   --table-border-color: #000;
   position: relative;
+  line-height: normal;
+  font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
 
   &__table {
     width: 100%;
@@ -318,6 +330,12 @@ const onColHandleClick = (e) => {
 
   &__tr {
     position: relative;
+  }
+  th,
+  td {
+    height: 100%;
+    padding: 0;
+    vertical-align: top;
   }
   &__insert {
     width: 100%;
@@ -373,13 +391,17 @@ const onColHandleClick = (e) => {
       outline: none;
       overflow: hidden;
       text-overflow: ellipsis;
+      line-height: normal;
     }
     .table-wrap__th {
+      height: 100%;
+      box-sizing: border-box;
       padding: 6px 10px;
       position: relative;
       border: 1px var(--table-border-style) var(--table-border-color);
       border-right: 0;
       background-color: #fafafa;
+      line-height: normal;
     }
     &:last-child {
       .table-wrap__th {
@@ -395,13 +417,17 @@ const onColHandleClick = (e) => {
       outline: none;
       overflow: hidden;
       word-break: break-all;
+      line-height: normal;
     }
     .table-wrap__td {
+      height: 100%;
+      box-sizing: border-box;
       padding: 6px 10px;
       position: relative;
       border: 1px var(--table-border-style) var(--table-border-color);
       border-top: 0;
       border-right: 0;
+      line-height: normal;
     }
     &:last-child {
       .table-wrap__td {
