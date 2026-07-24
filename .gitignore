@@ -23,8 +23,4 @@ dist-ssr
 *.sln
 *.sw?
 
-# QZ Tray private keys — never commit
-private-key.pem
-private-key.pfx
-public/certs/digital-certificate.txt
-!public/certs/README.md
+
