@@ -13,7 +13,7 @@
         "title": "自定义文本",
         "instance": true,
         "tag": "span",
-        "updateId": "1784878604078",
+        "updateId": "1784882694350",
         "position": {
           "clientX": 72.5,
           "clientY": 9.5
@@ -100,18 +100,18 @@
         "type": "TableUi",
         "classify": "TableMenu",
         "title": "列表",
-        "updateId": "1784878604079",
+        "updateId": "1784882694351",
         "instance": true,
         "tag": "div",
         "position": {
-          "clientX": 5,
-          "clientY": 53
+          "clientX": 11,
+          "clientY": 49
         },
         "default": {
-          "height": 224,
-          "width": 389,
-          "x": 5,
-          "y": 53
+          "height": 237,
+          "width": 375,
+          "x": 11,
+          "y": 49
         },
         "variable": {
           "enable": false,
@@ -153,14 +153,14 @@
         },
         "id": "el_a1tl1ujq",
         "rect": {
-          "x": 367,
-          "y": 362.5,
-          "width": 389,
-          "height": 224,
-          "top": 362.5,
-          "right": 756,
-          "bottom": 586.5,
-          "left": 367
+          "x": 373,
+          "y": 358.5,
+          "width": 375,
+          "height": 237,
+          "top": 358.5,
+          "right": 748,
+          "bottom": 595.5,
+          "left": 373
         }
       },
       {
@@ -170,10 +170,10 @@
         "title": "二维码",
         "tag": "img",
         "instance": true,
-        "updateId": "1784878715901",
+        "updateId": "1784882694352",
         "position": {
-          "clientX": 281.5,
-          "clientY": 125.5
+          "clientX": 270.5,
+          "clientY": 130.5
         },
         "variable": {
           "enable": true,
@@ -197,10 +197,10 @@
           ]
         },
         "default": {
-          "height": 110,
-          "width": 114,
-          "x": 281.5,
-          "y": 125.5
+          "height": 111,
+          "width": 115,
+          "x": 270.5,
+          "y": 130.5
         },
         "props": {
           "data": "${qr_code}",
@@ -213,14 +213,14 @@
         },
         "id": "el_q6zoy8jl",
         "rect": {
-          "x": 643.5,
-          "y": 435,
-          "width": 114,
-          "height": 110,
-          "top": 435,
-          "right": 757.5,
-          "bottom": 545,
-          "left": 643.5
+          "x": 632.5,
+          "y": 440,
+          "width": 115,
+          "height": 111,
+          "top": 440,
+          "right": 747.5,
+          "bottom": 551,
+          "left": 632.5
         }
       },
       {
@@ -230,16 +230,16 @@
         "title": "矩形",
         "tag": "div",
         "instance": true,
-        "updateId": "1784878746362",
+        "updateId": "1784882700478",
         "position": {
-          "clientX": 285.5,
-          "clientY": 123.5
+          "clientX": 272.5,
+          "clientY": 127.5
         },
         "default": {
-          "height": 113,
-          "width": 107,
-          "x": 285.5,
-          "y": 123.5
+          "height": 118,
+          "width": 112,
+          "x": 272.5,
+          "y": 127.5
         },
         "props": {
           "borderWidth": 1,
@@ -247,14 +247,14 @@
         },
         "id": "el_y1zjrf0j",
         "rect": {
-          "x": 647.5,
-          "y": 433,
-          "width": 107,
-          "height": 113,
-          "top": 433,
-          "right": 754.5,
-          "bottom": 546,
-          "left": 647.5
+          "x": 634.5,
+          "y": 437,
+          "width": 112,
+          "height": 118,
+          "top": 437,
+          "right": 746.5,
+          "bottom": 555,
+          "left": 634.5
         },
         "variable": {
           "enable": false,
