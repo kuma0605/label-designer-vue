@@ -2,9 +2,9 @@
 
 本目录放置 QZ Tray 数字证书与私钥，实现**静默打印**（不再每次弹授权框）。
 
-当前阶段**可以不放证书**：连接与打印仍可用，但 QZ Tray 会弹出「Allow / Block」授权对话框。
+不放证书也可以连接与打印，但 QZ Tray 会弹出「Allow / Block」授权对话框。
 
-## 前端静默打印（推荐 Demo / 内网）
+## 本项目默认：前端签名
 
 1. 安装并启动 [QZ Tray](https://qz.io/download)
 2. 打开 **QZ Tray → Advanced → Site Manager**
@@ -21,6 +21,11 @@ public/certs/private-key.pem
 
 依赖：`jsrsasign`（已在 package.json）。
 
+### 关于私钥放前端
+
+QZ 只连接**本机**打印机，密钥泄露不能远程打到你场地的设备。  
+实际风险仅限：某台电脑已用 Site Manager 信任了这套证书，又被恶意网页拿到私钥时，可在该机静默调用本地打印机。Demo / 内网场景通常可接受。
+
 ## 导入到另一台电脑
 
 网站侧仍用同一套 `digital-certificate.txt` + `private-key.pem`。
@@ -29,33 +34,21 @@ public/certs/private-key.pem
 
 1. 安装并启动 QZ Tray
 2. 打开 **Advanced → Site Manager**
-3. 用 **Browse** 选择本机生成时得到的证书文件（常见为桌面 `QZ Tray Demo Cert` 里的证书 / `override.crt`）导入
-4. 按提示确认安装后，**重启 QZ Tray**
+3. 用 **Browse** 选择生成时得到的信任证书（桌面 `QZ Tray Demo Cert` 中的证书，或同目录下的 `override.crt`）导入
+4. 按提示确认后，**重启 QZ Tray**
 
-导入完成后，该机访问同一前端即可静默打印，无需在每台机器重新 Create New。
+导入完成后，该机访问同一前端即可静默打印，无需重新 Create New。
 
 ## 后端签名（可选）
 
-若不想把私钥暴露给浏览器，可只放证书，签名走后端：
+本仓库不实现后端签名。若宿主项目自行提供签名接口，可调用 `setQzSignatureEndpoint('/api/qz/sign?request=')`；配置后优先走后端，不再读本目录的 `private-key.pem`。
 
-- 私钥仅放服务端
-- 后端提供签名接口（例如 `GET /api/qz/sign?request=...` 返回 base64 签名）
-- 前端：`setQzSignatureEndpoint('/api/qz/sign?request=')`
-
-配置了签名接口时，**优先走后端**，不再读前端的 `private-key.pem`。
-
-参考：
-
-- [Getting Started](https://qz.io/docs/getting-started)
-- [Signing Messages](https://qz.io/docs/signing)
-- [Signing Examples（含前端签名）](https://qz.io/docs/signing-examples)
+参考：[Getting Started](https://qz.io/docs/getting-started) · [Signing](https://qz.io/docs/signing) · [Signing Examples](https://qz.io/docs/signing-examples)
 
 ## 文件说明
 
-| 文件 | 是否提交到 Git | 说明 |
-|------|----------------|------|
-| `README.md` | 是 | 本说明 |
-| `digital-certificate.txt` | 默认 gitignore | 公钥证书 |
-| `private-key.pem` | 默认 gitignore | 私钥；前端签名时放此目录 |
-
-> Demo 证书默认被 `.gitignore` 忽略。若团队约定可入库，自行 `git add -f` 即可。
+| 文件 | 说明 |
+|------|------|
+| `README.md` | 本说明 |
+| `digital-certificate.txt` | 公钥证书；可随仓库提交 |
+| `private-key.pem` | 私钥；前端签名时放此目录，是否入库由团队自行约定 |

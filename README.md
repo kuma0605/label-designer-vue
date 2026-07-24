@@ -53,7 +53,7 @@ npm run build
 
 无标签机时可用系统 PDF 打印机验证内容与尺寸。
 
-静默打印：把 QZ Demo 的 `digital-certificate.txt` + `private-key.pem` 放到 [`public/certs/`](public/certs/README.md)，前端会自动签名，不再弹窗。
+静默打印：把 QZ Demo 的 `digital-certificate.txt` + `private-key.pem` 放到 [`public/certs/`](public/certs/README.md)，前端会自动签名，不再弹窗。换电脑时网站证书不变，另一台用 QZ **Site Manager → Browse** 导入同一份信任证书即可。
 
 ---
 
