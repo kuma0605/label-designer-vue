@@ -1,6 +1,6 @@
 [
   {
-    "id": "asset-tag-default",
+    "id": "tpl_xqu324m9",
     "name": "中医院模版 (80×60mm)",
     "width": 400,
     "height": 300,
@@ -20,15 +20,51 @@
         "variable": {
           "enable": false,
           "textData": [
-            { "value": "南", "key": "", "indexes": 0 },
-            { "value": "通", "key": "", "indexes": 1 },
-            { "value": "市", "key": "", "indexes": 2 },
-            { "value": "通", "key": "", "indexes": 3 },
-            { "value": "州", "key": "", "indexes": 4 },
-            { "value": "区", "key": "", "indexes": 5 },
-            { "value": "中", "key": "", "indexes": 6 },
-            { "value": "医", "key": "", "indexes": 7 },
-            { "value": "院", "key": "", "indexes": 8 }
+            {
+              "value": "南",
+              "key": "",
+              "indexes": 0
+            },
+            {
+              "value": "通",
+              "key": "",
+              "indexes": 1
+            },
+            {
+              "value": "市",
+              "key": "",
+              "indexes": 2
+            },
+            {
+              "value": "通",
+              "key": "",
+              "indexes": 3
+            },
+            {
+              "value": "州",
+              "key": "",
+              "indexes": 4
+            },
+            {
+              "value": "区",
+              "key": "",
+              "indexes": 5
+            },
+            {
+              "value": "中",
+              "key": "",
+              "indexes": 6
+            },
+            {
+              "value": "医",
+              "key": "",
+              "indexes": 7
+            },
+            {
+              "value": "院",
+              "key": "",
+              "indexes": 8
+            }
           ]
         },
         "default": {
