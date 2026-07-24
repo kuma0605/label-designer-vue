@@ -21,6 +21,19 @@ public/certs/private-key.pem
 
 依赖：`jsrsasign`（已在 package.json）。
 
+## 导入到另一台电脑
+
+网站侧仍用同一套 `digital-certificate.txt` + `private-key.pem`。
+
+另一台电脑的 QZ Tray 需要信任同一张证书：
+
+1. 安装并启动 QZ Tray
+2. 打开 **Advanced → Site Manager**
+3. 用 **Browse** 选择本机生成时得到的证书文件（常见为桌面 `QZ Tray Demo Cert` 里的证书 / `override.crt`）导入
+4. 按提示确认安装后，**重启 QZ Tray**
+
+导入完成后，该机访问同一前端即可静默打印，无需在每台机器重新 Create New。
+
 ## 后端签名（可选）
 
 若不想把私钥暴露给浏览器，可只放证书，签名走后端：
