@@ -23,4 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 
+# QZ Tray certs — keep local, do not commit
+public/certs/digital-certificate.txt
+public/certs/private-key.pem
+private-key.pem
+private-key.pfx
 
