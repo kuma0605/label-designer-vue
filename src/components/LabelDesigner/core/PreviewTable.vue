@@ -17,6 +17,16 @@ const formattedFontSize = computed(() => {
   return str.includes('px') ? str : `${str}px`;
 });
 
+const cellTextStyle = computed(() => ({
+  textAlign: align.value || 'left',
+  fontWeight: isBold.value ? 'bold' : 'normal',
+  fontSize: formattedFontSize.value,
+  // 避免继承打印弹窗 / TDesign 的 line-height:22px、PingFang，否则行高被撑高、绝对定位矩形上移
+  lineHeight: 'normal',
+  fontFamily:
+    "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+}));
+
 const tableData = computed(() => {
   const raw = props.component?.props?.tableData;
   if (!Array.isArray(raw) || raw.length === 0) return [];
@@ -50,11 +60,17 @@ const columnWidths = computed(() => {
 </script>
 
 <template>
+  <!-- DOM/CSS 对齐 TableUi，保证打印预览与画布行高一致 -->
   <div
-    class="preview-table-wrap"
+    class="table-wrap preview-table-wrap"
     :style="{ '--table-border-style': borderStyle }"
   >
-    <table v-if="columns.length" class="preview-table">
+    <table
+      v-if="columns.length"
+      class="table-wrap__table"
+      cellspacing="0"
+      cellpadding="0"
+    >
       <colgroup>
         <col
           v-for="(width, index) in columnWidths"
@@ -63,22 +79,24 @@ const columnWidths = computed(() => {
         />
       </colgroup>
       <thead>
-        <tr>
+        <tr class="table-wrap__tr">
           <th v-for="col in columns" :key="col">
-            <div
-              class="preview-table__th"
-              :style="{ textAlign: align, fontWeight: isBold ? 'bold' : 'normal', fontSize: formattedFontSize }"
-            >{{ col }}</div>
+            <div class="table-wrap__th">
+              <p :style="cellTextStyle">{{ col }}</p>
+            </div>
           </th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(row, rowIndex) in tableData" :key="rowIndex">
+        <tr
+          v-for="(row, rowIndex) in tableData"
+          :key="rowIndex"
+          class="table-wrap__tr"
+        >
           <td v-for="col in columns" :key="col">
-            <div
-              class="preview-table__td"
-              :style="{ textAlign: align, fontWeight: isBold ? 'bold' : 'normal', fontSize: formattedFontSize }"
-            >{{ row[col] }}</div>
+            <div class="table-wrap__td">
+              <span :style="cellTextStyle">{{ row[col] }}</span>
+            </div>
           </td>
         </tr>
       </tbody>
@@ -87,47 +105,61 @@ const columnWidths = computed(() => {
 </template>
 
 <style scoped>
+/* 与 TableUi.vue 单元格度量保持一致（不做预览侧特化） */
 .preview-table-wrap {
   width: 100%;
   height: 100%;
   --table-border-color: #000;
-  box-sizing: border-box;
+  position: relative;
+  line-height: normal;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
-.preview-table {
+.preview-table-wrap :deep(.table-wrap__table) {
   width: 100%;
   height: 100%;
   border-collapse: collapse;
   table-layout: fixed;
 }
 
-.preview-table th,
-.preview-table td {
-  vertical-align: middle;
+.preview-table-wrap :deep(th p) {
+  margin: 0;
+  min-width: 30px;
+  outline: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.preview-table__th,
-.preview-table__td {
+.preview-table-wrap :deep(.table-wrap__th) {
   padding: 6px 10px;
+  position: relative;
   border: 1px var(--table-border-style) var(--table-border-color);
   border-right: 0;
-  word-break: break-all;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-.preview-table__th {
   background-color: #fafafa;
-  font-weight: bold;
-  text-align: left;
 }
 
-.preview-table th:last-child .preview-table__th,
-.preview-table td:last-child .preview-table__td {
+.preview-table-wrap :deep(th:last-child .table-wrap__th) {
   border-right: 1px var(--table-border-style) var(--table-border-color);
 }
 
-.preview-table td .preview-table__td {
+.preview-table-wrap :deep(td span) {
+  display: inline-block;
+  width: 100%;
+  min-height: 20px;
+  outline: none;
+  overflow: hidden;
+  word-break: break-all;
+}
+
+.preview-table-wrap :deep(.table-wrap__td) {
+  padding: 6px 10px;
+  position: relative;
+  border: 1px var(--table-border-style) var(--table-border-color);
   border-top: 0;
+  border-right: 0;
+}
+
+.preview-table-wrap :deep(td:last-child .table-wrap__td) {
+  border-right: 1px var(--table-border-style) var(--table-border-color);
 }
 </style>

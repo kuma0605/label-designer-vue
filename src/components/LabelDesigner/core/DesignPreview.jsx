@@ -87,9 +87,9 @@ export default defineComponent({
     const getContainerStyle = (component) => {
       const { props: cProps = {}, position, rect, default: defaultRect, type } = component;
       const { fontSize, fontFamily, lineHeight, align, isBold } = cProps;
-      const fontWeight = isBold ? 'bold' : 'normal';
       const isLine = checkLine(type);
-      
+      const isText = typeof type === 'string' && type.includes('Text');
+
       // 优先使用模板存储的实际画布尺寸与位置 (defaultRect.width / height, position.clientX / clientY)
       const width = defaultRect?.width ?? rect?.width ?? 100;
       const height = defaultRect?.height ?? rect?.height ?? 30;
@@ -97,20 +97,28 @@ export default defineComponent({
       const topVal = position?.clientY ?? defaultRect?.y ?? 0;
       const leftVal = position?.clientX ?? defaultRect?.x ?? 0;
 
-      return {
-        fontSize: formatFontSize(fontSize),
-        fontFamily,
-        lineHeight: lineHeight || '1.5',
-        textAlign: align,
+      // 与画布 Drag.vue 对齐：普通组件 1px 透明边框；线/矩形无边框。
+      // 排版样式只给文本——表格若继承 line-height:1.5 会改变行高，导致绝对定位的矩形与行线错开。
+      const style = {
         top: topVal + 'px',
         left: leftVal + 'px',
-        fontWeight,
         width: width + 'px',
         height: height + 'px',
         padding: '0',
         position: 'absolute',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        border: isLine ? 'none' : '1px solid transparent'
       };
+
+      if (isText) {
+        style.fontSize = formatFontSize(fontSize);
+        style.fontFamily = fontFamily;
+        style.lineHeight = lineHeight || '1.5';
+        style.textAlign = align;
+        style.fontWeight = isBold ? 'bold' : 'normal';
+      }
+
+      return style;
     };
 
     const renderContent = (component) => {
