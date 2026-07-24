@@ -8,6 +8,10 @@ const props = defineProps({
 });
 
 const borderStyle = computed(() => props.component?.props?.borderStyle || 'solid');
+const borderWidth = computed(() => {
+  const w = Number(props.component?.props?.borderWidth);
+  return Number.isFinite(w) && w > 0 ? w : 2;
+});
 const align = computed(() => props.component?.props?.align || 'left');
 const isBold = computed(() => !!props.component?.props?.isBold);
 const formattedFontSize = computed(() => {
@@ -16,6 +20,11 @@ const formattedFontSize = computed(() => {
   const str = String(f);
   return str.includes('px') ? str : `${str}px`;
 });
+
+const tableWrapStyle = computed(() => ({
+  '--table-border-style': borderStyle.value,
+  '--table-border-width': `${borderWidth.value}px`
+}));
 
 const cellTextStyle = computed(() => ({
   textAlign: align.value || 'left',
@@ -62,7 +71,7 @@ const columnWidths = computed(() => {
   <!-- DOM/CSS 对齐 TableUi，保证打印预览与画布行高一致 -->
   <div
     class="table-wrap preview-table-wrap"
-    :style="{ '--table-border-style': borderStyle }"
+    :style="tableWrapStyle"
   >
     <table
       v-if="columns.length"
@@ -142,14 +151,14 @@ const columnWidths = computed(() => {
   box-sizing: border-box;
   padding: 6px 10px;
   position: relative;
-  border: 1px var(--table-border-style) var(--table-border-color);
+  border: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
   border-right: 0;
   background-color: #fafafa;
   line-height: normal;
 }
 
 .preview-table-wrap :deep(th:last-child .table-wrap__th) {
-  border-right: 1px var(--table-border-style) var(--table-border-color);
+  border-right: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
 }
 
 .preview-table-wrap :deep(td span) {
@@ -167,13 +176,13 @@ const columnWidths = computed(() => {
   box-sizing: border-box;
   padding: 6px 10px;
   position: relative;
-  border: 1px var(--table-border-style) var(--table-border-color);
+  border: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
   border-top: 0;
   border-right: 0;
   line-height: normal;
 }
 
 .preview-table-wrap :deep(td:last-child .table-wrap__td) {
-  border-right: 1px var(--table-border-style) var(--table-border-color);
+  border-right: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
 }
 </style>

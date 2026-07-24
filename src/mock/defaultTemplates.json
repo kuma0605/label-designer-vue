@@ -118,8 +118,9 @@
           "textData": []
         },
         "props": {
-          "borderStyle": "solid",
-          "headerBold": true,
+        "borderStyle": "solid",
+        "borderWidth": 2,
+        "headerBold": true,
           "bodyBold": true,
           "fontSize": "16px",
           "columnWidths": [

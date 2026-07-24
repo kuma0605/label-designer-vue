@@ -106,13 +106,13 @@ const PRINT_CSS = `
     box-sizing: border-box;
     padding: 6px 10px;
     position: relative;
-    border: 1px var(--table-border-style, solid) #000;
+    border: var(--table-border-width, 2px) var(--table-border-style, solid) #000;
     border-right: 0;
     background-color: #fafafa;
     line-height: normal;
     font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
   }
-  .table-wrap th:last-child .table-wrap__th { border-right: 1px var(--table-border-style, solid) #000; }
+  .table-wrap th:last-child .table-wrap__th { border-right: var(--table-border-width, 2px) var(--table-border-style, solid) #000; }
   .table-wrap td span {
     display: inline-block;
     width: 100%;
@@ -127,13 +127,13 @@ const PRINT_CSS = `
     box-sizing: border-box;
     padding: 6px 10px;
     position: relative;
-    border: 1px var(--table-border-style, solid) #000;
+    border: var(--table-border-width, 2px) var(--table-border-style, solid) #000;
     border-top: 0;
     border-right: 0;
     line-height: normal;
     font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
   }
-  .table-wrap td:last-child .table-wrap__td { border-right: 1px var(--table-border-style, solid) #000; }
+  .table-wrap td:last-child .table-wrap__td { border-right: var(--table-border-width, 2px) var(--table-border-style, solid) #000; }
   @media print {
     @page { margin: 0; }
     body { margin: 0; }

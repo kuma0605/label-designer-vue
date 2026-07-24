@@ -257,13 +257,22 @@ const handleSetCustomPageSize = () => {
                 </t-select>
               </t-form-item>
 
-              <t-form-item label="表格边框粗细">
+              <t-form-item label="表格边框线型">
                 <t-select v-model="currentComponent.props.borderStyle">
                   <t-option value="solid" label="实线" />
                   <t-option value="dashed" label="虚线" />
                   <t-option value="dotted" label="点状线" />
                   <t-option value="none" label="无边框" />
                 </t-select>
+              </t-form-item>
+              <t-form-item label="表格边框粗细">
+                <t-input-number
+                  v-model="currentComponent.props.borderWidth"
+                  :min="1"
+                  :max="8"
+                  :step="1"
+                  theme="column"
+                />
               </t-form-item>
             </template>
 

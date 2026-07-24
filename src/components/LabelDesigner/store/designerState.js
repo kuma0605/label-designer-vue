@@ -47,6 +47,7 @@ export const state = reactive({
       variable: { enable: false, textData: [] },
       props: {
         borderStyle: 'solid',
+        borderWidth: 2,
         align: 'left',
         isBold: false,
         fontSize: '12px',

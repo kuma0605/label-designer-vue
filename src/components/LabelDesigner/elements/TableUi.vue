@@ -18,6 +18,10 @@ const props = defineProps({
     type: String,
     default: 'solid'
   },
+  borderWidth: {
+    type: [Number, String],
+    default: 2
+  },
   align: {
     type: String,
     default: 'left'
@@ -59,8 +63,10 @@ const formattedFontSize = computed(() => {
 });
 
 const getItemStyle = computed(() => {
+  const width = Number(props.borderWidth);
   return {
     '--table-border-style': props.borderStyle || 'solid',
+    '--table-border-width': `${Number.isFinite(width) && width > 0 ? width : 2}px`,
     fontFamily: 'Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif',
     lineHeight: 'normal'
   };
@@ -398,14 +404,14 @@ const onColHandleClick = (e) => {
       box-sizing: border-box;
       padding: 6px 10px;
       position: relative;
-      border: 1px var(--table-border-style) var(--table-border-color);
+      border: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
       border-right: 0;
       background-color: #fafafa;
       line-height: normal;
     }
     &:last-child {
       .table-wrap__th {
-        border-right: 1px var(--table-border-style) var(--table-border-color);
+        border-right: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
       }
     }
   }
@@ -424,14 +430,14 @@ const onColHandleClick = (e) => {
       box-sizing: border-box;
       padding: 6px 10px;
       position: relative;
-      border: 1px var(--table-border-style) var(--table-border-color);
+      border: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
       border-top: 0;
       border-right: 0;
       line-height: normal;
     }
     &:last-child {
       .table-wrap__td {
-        border-right: 1px var(--table-border-style) var(--table-border-color);
+        border-right: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
       }
     }
   }
