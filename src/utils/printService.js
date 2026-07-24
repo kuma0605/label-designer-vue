@@ -81,59 +81,40 @@ const PRINT_CSS = `
   }
   .table-wrap__table {
     width: 100%;
-    height: 100%;
+    height: auto;
     border-collapse: collapse;
     table-layout: fixed;
   }
   .table-wrap th, .table-wrap td {
-    padding: 0;
-    height: 100%;
+    position: relative;
+    box-sizing: border-box;
+    padding: 6px 10px;
     color: #000000;
-    vertical-align: top;
+    vertical-align: middle;
+    border: var(--table-border-width, 2px) var(--table-border-style, solid) #000;
     line-height: normal;
     font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  }
+  .table-wrap th {
+    background-color: #fafafa;
   }
   .table-wrap th p {
     margin: 0;
     min-width: 30px;
+    width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: normal;
     font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
   }
-  .table-wrap__th {
-    height: 100%;
-    box-sizing: border-box;
-    padding: 6px 10px;
-    position: relative;
-    border: var(--table-border-width, 2px) var(--table-border-style, solid) #000;
-    border-right: 0;
-    background-color: #fafafa;
-    line-height: normal;
-    font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
-  }
-  .table-wrap th:last-child .table-wrap__th { border-right: var(--table-border-width, 2px) var(--table-border-style, solid) #000; }
   .table-wrap td span {
-    display: inline-block;
+    display: block;
     width: 100%;
-    min-height: 20px;
     overflow: hidden;
     word-break: break-all;
     line-height: normal;
     font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
   }
-  .table-wrap__td {
-    height: 100%;
-    box-sizing: border-box;
-    padding: 6px 10px;
-    position: relative;
-    border: var(--table-border-width, 2px) var(--table-border-style, solid) #000;
-    border-top: 0;
-    border-right: 0;
-    line-height: normal;
-    font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
-  }
-  .table-wrap td:last-child .table-wrap__td { border-right: var(--table-border-width, 2px) var(--table-border-style, solid) #000; }
   @media print {
     @page { margin: 0; }
     body { margin: 0; }

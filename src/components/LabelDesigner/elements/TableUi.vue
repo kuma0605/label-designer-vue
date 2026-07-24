@@ -329,7 +329,8 @@ const onColHandleClick = (e) => {
 
   &__table {
     width: 100%;
-    height: 100%;
+    /* 不要 height:100%：表格模型会把剩余高度堆到某一行 */
+    height: auto;
     border-collapse: collapse;
     table-layout: fixed;
   }
@@ -337,12 +338,22 @@ const onColHandleClick = (e) => {
   &__tr {
     position: relative;
   }
+
+  /* 边框画在 th/td 上，左右列必然同高；内层只负责内容与手柄 */
   th,
   td {
-    height: 100%;
-    padding: 0;
-    vertical-align: top;
+    position: relative;
+    box-sizing: border-box;
+    padding: 6px 10px;
+    vertical-align: middle;
+    border: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
+    line-height: normal;
   }
+
+  th {
+    background-color: #fafafa;
+  }
+
   &__insert {
     width: 100%;
     height: 3px;
@@ -390,56 +401,26 @@ const onColHandleClick = (e) => {
       width: 5px;
     }
   }
-  th {
-    p {
-      margin: 0;
-      min-width: 30px;
-      outline: none;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      line-height: normal;
-    }
-    .table-wrap__th {
-      height: 100%;
-      box-sizing: border-box;
-      padding: 6px 10px;
-      position: relative;
-      border: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
-      border-right: 0;
-      background-color: #fafafa;
-      line-height: normal;
-    }
-    &:last-child {
-      .table-wrap__th {
-        border-right: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
-      }
-    }
+
+  /* 内层无边框、不设 height:100%；绝对定位手柄落到 th/td 上 */
+
+  th p {
+    margin: 0;
+    min-width: 30px;
+    width: 100%;
+    outline: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: normal;
   }
-  td {
-    span {
-      display: inline-block;
-      width: 100%;
-      min-height: 20px;
-      outline: none;
-      overflow: hidden;
-      word-break: break-all;
-      line-height: normal;
-    }
-    .table-wrap__td {
-      height: 100%;
-      box-sizing: border-box;
-      padding: 6px 10px;
-      position: relative;
-      border: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
-      border-top: 0;
-      border-right: 0;
-      line-height: normal;
-    }
-    &:last-child {
-      .table-wrap__td {
-        border-right: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
-      }
-    }
+
+  td span {
+    display: block;
+    width: 100%;
+    outline: none;
+    overflow: hidden;
+    word-break: break-all;
+    line-height: normal;
   }
 }
 </style>
