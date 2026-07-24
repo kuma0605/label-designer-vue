@@ -239,13 +239,21 @@ const handleSetCustomPageSize = () => {
               </t-form-item>
 
               <t-form-item label="文字字号">
-                <t-select v-model="currentComponent.props.fontSize">
+                <t-select v-model="currentComponent.props.fontSize" creatable filterable placeholder="选择或自定义输入字号（如 20px）">
+                  <t-option value="9px" label="9px" />
                   <t-option value="10px" label="10px" />
                   <t-option value="11px" label="11px" />
                   <t-option value="12px" label="12px (默认)" />
                   <t-option value="13px" label="13px" />
                   <t-option value="14px" label="14px" />
                   <t-option value="16px" label="16px" />
+                  <t-option value="18px" label="18px" />
+                  <t-option value="20px" label="20px" />
+                  <t-option value="24px" label="24px" />
+                  <t-option value="28px" label="28px" />
+                  <t-option value="32px" label="32px" />
+                  <t-option value="36px" label="36px" />
+                  <t-option value="48px" label="48px" />
                 </t-select>
               </t-form-item>
 

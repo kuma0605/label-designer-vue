@@ -1,32 +1,41 @@
 [
   {
     "id": "asset-tag-default",
-    "name": "南通市通州区中医院模板 (80×60mm)",
+    "name": "中医院模版 (80×60mm)",
     "width": 400,
     "height": 300,
     "data": [
       {
-        "id": "el_mepvg6sk",
         "name": "customText",
         "type": "TextUi",
         "classify": "TextMenu",
         "title": "自定义文本",
         "instance": true,
         "tag": "span",
-        "updateId": "1784797045483",
+        "updateId": "1784878604078",
         "position": {
           "clientX": 72.5,
           "clientY": 9.5
+        },
+        "variable": {
+          "enable": false,
+          "textData": [
+            { "value": "南", "key": "", "indexes": 0 },
+            { "value": "通", "key": "", "indexes": 1 },
+            { "value": "市", "key": "", "indexes": 2 },
+            { "value": "通", "key": "", "indexes": 3 },
+            { "value": "州", "key": "", "indexes": 4 },
+            { "value": "区", "key": "", "indexes": 5 },
+            { "value": "中", "key": "", "indexes": 6 },
+            { "value": "医", "key": "", "indexes": 7 },
+            { "value": "院", "key": "", "indexes": 8 }
+          ]
         },
         "default": {
           "height": 34,
           "width": 246.109375,
           "x": 72.5,
           "y": 9.5
-        },
-        "variable": {
-          "enable": false,
-          "textData": []
         },
         "props": {
           "text": "南通市通州区中医院",
@@ -36,17 +45,27 @@
           "lineHeight": "1.5",
           "isBold": true,
           "hasBorder": false
+        },
+        "id": "el_mepvg6sk",
+        "rect": {
+          "x": 434.5,
+          "y": 319,
+          "width": 246.109375,
+          "height": 34,
+          "top": 319,
+          "right": 680.609375,
+          "bottom": 353,
+          "left": 434.5
         }
       },
       {
-        "id": "el_a1tl1ujq",
         "name": "table",
         "type": "TableUi",
         "classify": "TableMenu",
         "title": "列表",
+        "updateId": "1784878604079",
         "instance": true,
         "tag": "div",
-        "updateId": "1784797045484",
         "position": {
           "clientX": 5,
           "clientY": 53
@@ -63,10 +82,12 @@
         },
         "props": {
           "borderStyle": "solid",
-          "fontSize": "14px",
+          "headerBold": true,
+          "bodyBold": true,
+          "fontSize": "16px",
           "columnWidths": [
-            33.33,
-            66.67
+            15.76,
+            84.24
           ],
           "tableData": [
             {
@@ -92,62 +113,111 @@
           ],
           "align": "left",
           "isBold": true
+        },
+        "id": "el_a1tl1ujq",
+        "rect": {
+          "x": 367,
+          "y": 362.5,
+          "width": 389,
+          "height": 224,
+          "top": 362.5,
+          "right": 756,
+          "bottom": 586.5,
+          "left": 367
         }
       },
       {
-        "id": "el_q6zoy8jl",
         "name": "qrCode",
         "type": "QrCodeUi",
         "classify": "QrCodeMenu",
         "title": "二维码",
-        "instance": true,
         "tag": "img",
-        "updateId": "1784797045484",
+        "instance": true,
+        "updateId": "1784878715901",
         "position": {
           "clientX": 281.5,
-          "clientY": 121.5
-        },
-        "default": {
-          "height": 109,
-          "width": 114,
-          "x": 281.5,
-          "y": 121.5
+          "clientY": 125.5
         },
         "variable": {
           "enable": true,
-          "textData": []
+          "textData": [
+            {
+              "value": "${qr_code}",
+              "key": "qr_code",
+              "indexes": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9
+              ]
+            }
+          ]
+        },
+        "default": {
+          "height": 110,
+          "width": 114,
+          "x": 281.5,
+          "y": 125.5
         },
         "props": {
           "data": "${qr_code}",
           "options": {
             "margin": 4,
+            "width": "",
             "scale": 4,
             "errorCorrectionLevel": "H"
           }
+        },
+        "id": "el_q6zoy8jl",
+        "rect": {
+          "x": 643.5,
+          "y": 435,
+          "width": 114,
+          "height": 110,
+          "top": 435,
+          "right": 757.5,
+          "bottom": 545,
+          "left": 643.5
         }
       },
       {
-        "id": "el_y1zjrf0j",
         "name": "rectangle",
         "type": "RectangleUi",
         "classify": "RectangleMenu",
         "title": "矩形",
-        "instance": true,
         "tag": "div",
-        "updateId": "1784797071988",
+        "instance": true,
+        "updateId": "1784878746362",
         "position": {
-          "clientX": 286.5,
-          "clientY": 121.5
+          "clientX": 285.5,
+          "clientY": 123.5
         },
         "default": {
-          "height": 115,
-          "width": 106,
-          "x": 286.5,
-          "y": 121.5
+          "height": 113,
+          "width": 107,
+          "x": 285.5,
+          "y": 123.5
         },
         "props": {
           "borderWidth": 1,
           "lineType": "solid"
+        },
+        "id": "el_y1zjrf0j",
+        "rect": {
+          "x": 647.5,
+          "y": 433,
+          "width": 107,
+          "height": 113,
+          "top": 433,
+          "right": 754.5,
+          "bottom": 546,
+          "left": 647.5
         },
         "variable": {
           "enable": false,

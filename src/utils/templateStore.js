@@ -96,11 +96,11 @@ export function loadTemplatesFromStorage(options = {}) {
         const normalized = list.map((tpl) => {
           const norm = normalizeTemplate(tpl);
           // 自动同步/升级默认模板到 80x60mm 中医院固定资产标签
-          if (norm.id === 'asset-tag-default') {
-            const seed = defaults.find((d) => d.id === 'asset-tag-default');
+          if (norm.id === 'asset-tag-default' || norm.id === 'tpl_xqu324m9') {
+            const seed = defaults[0];
             if (seed) {
               updated = true;
-              return structuredClone(seed);
+              return { ...structuredClone(seed), id: norm.id };
             }
           }
           return norm;
