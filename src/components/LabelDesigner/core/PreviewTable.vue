@@ -23,11 +23,12 @@ const formattedFontSize = computed(() => {
 
 const cellTextStyle = computed(() => ({
   textAlign: align.value || 'left',
-  fontWeight: isBold.value ? 'bold' : 'normal',
+  fontWeight: isBold.value ? 700 : 400,
   fontSize: formattedFontSize.value,
-  // 跨平台统一度量：避免 Mac SF / Win Segoe / 弹窗 PingFang 行高不一致
-  lineHeight: 'normal',
-  fontFamily: 'Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif'
+  // 固定行高倍数，降低 QZ WebKit / Chrome 字体度量差
+  lineHeight: '1.25',
+  // 中文优先：QZ 下 Arial 回退字重经常不加粗
+  fontFamily: '"SimHei", "Microsoft YaHei", Arial, sans-serif'
 }));
 
 /** 原始列 key（可能含 ${var}），用于取数；展示用 label（已替换） */
@@ -54,9 +55,12 @@ const tableData = computed(() => {
   });
 });
 
+const tableRowCount = computed(() => tableData.value.length + 1); // + header
+
 const tableWrapStyle = computed(() => ({
   '--table-border-style': borderStyle.value,
-  '--table-border-width': `${borderWidth.value}px`
+  '--table-border-width': `${borderWidth.value}px`,
+  '--table-row-count': String(Math.max(tableRowCount.value, 1))
 }));
 
 const columnWidths = computed(() => {
@@ -77,6 +81,7 @@ const columnWidths = computed(() => {
   <!-- DOM/CSS 对齐 TableUi，保证打印预览与画布行高一致 -->
   <div
     class="table-wrap preview-table-wrap"
+    :class="{ 'is-bold': isBold }"
     :style="tableWrapStyle"
   >
     <table
@@ -125,14 +130,14 @@ const columnWidths = computed(() => {
   height: 100%;
   --table-border-color: #000;
   position: relative;
-  line-height: normal;
-  font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  line-height: 1.25;
+  font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif;
 }
 
 .preview-table-wrap :deep(.table-wrap__table) {
   width: 100%;
-  height: auto;
-  /* 与 TableUi / 位图打印一致：单边描边，避免相邻线叠粗 */
+  /* 锁死行高：均分行高，避免 QZ WebKit 与 Chrome 内容撑高不一致导致二维码错位 */
+  height: 100%;
   border-collapse: separate;
   border-spacing: 0;
   table-layout: fixed;
@@ -140,16 +145,21 @@ const columnWidths = computed(() => {
   border-left: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
 }
 
+.preview-table-wrap :deep(.table-wrap__tr) {
+  height: calc(100% / var(--table-row-count, 6));
+}
+
 .preview-table-wrap :deep(th),
 .preview-table-wrap :deep(td) {
   position: relative;
   box-sizing: border-box;
-  padding: 6px 10px;
+  padding: 4px 8px;
   vertical-align: middle;
   border: 0;
   border-right: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
   border-bottom: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
-  line-height: normal;
+  line-height: 1.25;
+  height: inherit;
 }
 
 .preview-table-wrap :deep(th) {
@@ -163,7 +173,8 @@ const columnWidths = computed(() => {
   outline: none;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: normal;
+  line-height: 1.25;
+  font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif;
 }
 
 .preview-table-wrap :deep(td span) {
@@ -172,6 +183,12 @@ const columnWidths = computed(() => {
   outline: none;
   overflow: hidden;
   word-break: break-all;
-  line-height: normal;
+  line-height: 1.25;
+  font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif;
+}
+
+.preview-table-wrap.is-bold :deep(th p),
+.preview-table-wrap.is-bold :deep(td span) {
+  font-weight: 700 !important;
 }
 </style>

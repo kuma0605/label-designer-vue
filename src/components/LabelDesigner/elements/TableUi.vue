@@ -62,22 +62,25 @@ const formattedFontSize = computed(() => {
   return str.includes('px') ? str : `${str}px`;
 });
 
+const tableRowCount = computed(() => (props.tableData?.length || 0) + 1);
+
 const getItemStyle = computed(() => {
   const width = Number(props.borderWidth);
   return {
     '--table-border-style': props.borderStyle || 'solid',
     '--table-border-width': `${Number.isFinite(width) && width > 0 ? width : 2}px`,
-    fontFamily: 'Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif',
-    lineHeight: 'normal'
+    '--table-row-count': String(Math.max(tableRowCount.value, 1)),
+    fontFamily: '"SimHei", "Microsoft YaHei", Arial, sans-serif',
+    lineHeight: '1.25'
   };
 });
 
 const cellTextStyle = computed(() => ({
   textAlign: props.align || 'left',
-  fontWeight: props.isBold ? 'bold' : 'normal',
+  fontWeight: props.isBold ? 700 : 400,
   fontSize: formattedFontSize.value,
-  lineHeight: 'normal',
-  fontFamily: 'Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif'
+  lineHeight: '1.25',
+  fontFamily: '"SimHei", "Microsoft YaHei", Arial, sans-serif'
 }));
 
 const columns = computed(() => {
@@ -228,7 +231,7 @@ const onColHandleClick = (e) => {
 </script>
 
 <template>
-  <div class="table-wrap" :style="getItemStyle">
+  <div class="table-wrap" :class="{ 'is-bold': isBold }" :style="getItemStyle">
     <table
       ref="tableRef"
       class="w-100 table-wrap__table"
@@ -353,13 +356,13 @@ const onColHandleClick = (e) => {
   height: 100%;
   --table-border-color: #000;
   position: relative;
-  line-height: normal;
-  font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  line-height: 1.25;
+  font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif;
 
   &__table {
     width: 100%;
-    /* 不要 height:100%：表格模型会把剩余高度堆到某一行 */
-    height: auto;
+    /* 均分行高：与预览/QZ HTML 一致，避免绝对定位二维码相对行线漂移 */
+    height: 100%;
     /*
      * separate + 单边描边：html2canvas 不会合并 collapse 边框，
      * 若 th/td 四边都画，位图里相邻线会叠成约 2 倍粗。
@@ -374,6 +377,7 @@ const onColHandleClick = (e) => {
 
   &__tr {
     position: relative;
+    height: calc(100% / var(--table-row-count, 6));
   }
 
   /* 边框画在 th/td 上，左右列必然同高；内层只负责内容与手柄 */
@@ -381,16 +385,22 @@ const onColHandleClick = (e) => {
   td {
     position: relative;
     box-sizing: border-box;
-    padding: 6px 10px;
+    padding: 4px 8px;
     vertical-align: middle;
     border: 0;
     border-right: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
     border-bottom: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
-    line-height: normal;
+    line-height: 1.25;
+    height: inherit;
   }
 
   th {
     background-color: #fafafa;
+  }
+
+  &.is-bold th p,
+  &.is-bold td span {
+    font-weight: 700 !important;
   }
 
   &__insert {
@@ -450,7 +460,8 @@ const onColHandleClick = (e) => {
     outline: none;
     overflow: hidden;
     text-overflow: ellipsis;
-    line-height: normal;
+    line-height: 1.25;
+    font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif;
   }
 
   td span {
@@ -459,7 +470,8 @@ const onColHandleClick = (e) => {
     outline: none;
     overflow: hidden;
     word-break: break-all;
-    line-height: normal;
+    line-height: 1.25;
+    font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif;
   }
 }
 </style>

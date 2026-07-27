@@ -45,7 +45,21 @@ const PRINT_CSS = `
   }
   .template-wrap { position: relative; overflow: hidden; background: #fff; color: #000000; }
   .component { position: absolute; box-sizing: border-box; color: #000000; }
-  .detail { color: #000000 !important; font-weight: 600; font-family: "SimHei", "Microsoft YaHei", "Arial", sans-serif; }
+  .detail {
+    color: #000000 !important;
+    font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif !important;
+  }
+  /* QZ WebKit 对中文加粗常失效：字重 + 微描边保证热敏可见 */
+  .detail[style*="font-weight: bold"],
+  .detail[style*="font-weight:bold"],
+  .detail[style*="font-weight: 700"],
+  .detail[style*="font-weight:700"],
+  .table-wrap.is-bold th p,
+  .table-wrap.is-bold td span {
+    font-weight: 700 !important;
+    -webkit-text-stroke: 0.45px #000;
+    paint-order: stroke fill;
+  }
   .barcode-wrap {
     display: flex;
     align-items: center;
@@ -76,30 +90,34 @@ const PRINT_CSS = `
     width: 100%;
     height: 100%;
     position: relative;
-    line-height: normal;
-    font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
+    line-height: 1.25;
+    font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif;
   }
   .table-wrap__table {
     width: 100%;
-    height: auto;
-    /* html2canvas 不合并 collapse 边框；单边描边保证内外线宽一致 */
+    /* 均分行高，锁定与画布一致，避免 QZ 行高变矮导致二维码相对下移/超出 3 行 */
+    height: 100%;
     border-collapse: separate;
     border-spacing: 0;
     table-layout: fixed;
     border-top: var(--table-border-width, 2px) var(--table-border-style, solid) #000;
     border-left: var(--table-border-width, 2px) var(--table-border-style, solid) #000;
   }
+  .table-wrap__tr {
+    height: calc(100% / var(--table-row-count, 6));
+  }
   .table-wrap th, .table-wrap td {
     position: relative;
     box-sizing: border-box;
-    padding: 6px 10px;
+    padding: 4px 8px;
     color: #000000;
     vertical-align: middle;
     border: 0;
     border-right: var(--table-border-width, 2px) var(--table-border-style, solid) #000;
     border-bottom: var(--table-border-width, 2px) var(--table-border-style, solid) #000;
-    line-height: normal;
-    font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
+    line-height: 1.25;
+    height: inherit;
+    font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif;
   }
   .table-wrap th {
     background-color: #fafafa;
@@ -110,16 +128,16 @@ const PRINT_CSS = `
     width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
-    line-height: normal;
-    font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
+    line-height: 1.25;
+    font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif !important;
   }
   .table-wrap td span {
     display: block;
     width: 100%;
     overflow: hidden;
     word-break: break-all;
-    line-height: normal;
-    font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
+    line-height: 1.25;
+    font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif !important;
   }
   @media print {
     @page { margin: 0; }

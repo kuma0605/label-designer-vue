@@ -10,7 +10,8 @@ const props = defineProps({
 const textStyle = computed(() => {
   const { isBold } = props.component.props || {};
   return {
-    fontWeight: isBold ? 'bold' : 'normal'
+    fontWeight: isBold ? 700 : 400,
+    fontFamily: '"SimHei", "Microsoft YaHei", Arial, sans-serif'
   };
 });
 
