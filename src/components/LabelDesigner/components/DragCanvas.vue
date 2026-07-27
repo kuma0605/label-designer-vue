@@ -101,6 +101,11 @@ const handleDrop = (e) => {
   if (xArea && yArea) {
     const varKey = e.dataTransfer.getData('variableKey');
     const varLabel = e.dataTransfer.getData('variableLabel');
+
+    // 变量拖到表格单元格时由 TableUi 处理，避免再新建一个文本组件
+    if (varKey && e.target?.closest?.('.table-wrap')) {
+      return;
+    }
     
     const canvasX = clientX - boardRect.left;
     const canvasY = clientY - boardRect.top;

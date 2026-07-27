@@ -1,10 +1,10 @@
 <script setup>
 import { computed } from 'vue';
-import { replaceVars } from '@/utils/preview';
+import { replaceVars, toVariablesMap } from '@/utils/preview';
 
 const props = defineProps({
   component: { type: Object, required: true },
-  variables: { type: Object, default: () => ({}) }
+  variables: { type: [Object, Array], default: () => ({}) }
 });
 
 const textStyle = computed(() => {
@@ -17,7 +17,7 @@ const textStyle = computed(() => {
 // 渲染文本：将 ${key} 占位符替换为真实数据
 const renderedHtml = computed(() => {
   const { variable, props: cProps = {} } = props.component || {};
-  const vars = props.variables || {};
+  const vars = toVariablesMap(props.variables);
 
   // 有变量标记且 textData 数组非空：按 textData 分段渲染
   if (

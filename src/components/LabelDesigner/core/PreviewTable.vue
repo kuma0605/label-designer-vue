@@ -4,7 +4,7 @@ import { replaceVars } from '@/utils/preview';
 
 const props = defineProps({
   component: { type: Object, required: true },
-  variables: { type: Object, default: () => ({}) }
+  variables: { type: [Object, Array], default: () => ({}) }
 });
 
 const borderStyle = computed(() => props.component?.props?.borderStyle || 'solid');
@@ -30,6 +30,16 @@ const cellTextStyle = computed(() => ({
   fontFamily: 'Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif'
 }));
 
+/** 原始列 key（可能含 ${var}），用于取数；展示用 label（已替换） */
+const columns = computed(() => {
+  const raw = props.component?.props?.tableData;
+  if (!Array.isArray(raw) || !raw.length) return [];
+  return Object.keys(raw[0] || {}).map((key) => ({
+    key,
+    label: replaceVars(String(key), props.variables)
+  }));
+});
+
 const tableData = computed(() => {
   const raw = props.component?.props?.tableData;
   if (!Array.isArray(raw) || raw.length === 0) return [];
@@ -37,6 +47,7 @@ const tableData = computed(() => {
   return raw.map((row) => {
     const next = {};
     Object.keys(row || {}).forEach((key) => {
+      // 单元格值与表头（列名）都支持 ${asset_num} 等占位符
       next[key] = replaceVars(String(row[key] ?? ''), props.variables);
     });
     return next;
@@ -47,11 +58,6 @@ const tableWrapStyle = computed(() => ({
   '--table-border-style': borderStyle.value,
   '--table-border-width': `${borderWidth.value}px`
 }));
-
-const columns = computed(() => {
-  if (!tableData.value.length) return [];
-  return Object.keys(tableData.value[0]);
-});
 
 const columnWidths = computed(() => {
   const colCount = columns.value.length;
@@ -88,9 +94,9 @@ const columnWidths = computed(() => {
       </colgroup>
       <thead>
         <tr class="table-wrap__tr">
-          <th v-for="col in columns" :key="col">
+          <th v-for="col in columns" :key="col.key">
             <div class="table-wrap__th">
-              <p :style="cellTextStyle">{{ col }}</p>
+              <p :style="cellTextStyle">{{ col.label }}</p>
             </div>
           </th>
         </tr>
@@ -101,9 +107,9 @@ const columnWidths = computed(() => {
           :key="rowIndex"
           class="table-wrap__tr"
         >
-          <td v-for="col in columns" :key="col">
+          <td v-for="col in columns" :key="col.key">
             <div class="table-wrap__td">
-              <span :style="cellTextStyle">{{ row[col] }}</span>
+              <span :style="cellTextStyle">{{ row[col.key] }}</span>
             </div>
           </td>
         </tr>

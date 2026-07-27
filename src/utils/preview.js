@@ -2,16 +2,47 @@ import barcode from 'jsbarcode';
 import QrCode from 'qrcode';
 
 /**
+ * 将 variables 规范为 { key: value } 映射
+ * 兼容设备对象，以及 [{ key, value/label }] 数组
+ */
+export function toVariablesMap(variables) {
+  if (!variables) return {};
+  if (Array.isArray(variables)) {
+    const map = {};
+    variables.forEach((item) => {
+      if (!item || item.key == null || item.key === '') return;
+      if (item.value !== undefined && item.value !== null) {
+        map[item.key] = item.value;
+      } else if (item.label !== undefined) {
+        map[item.key] = item.label;
+      }
+    });
+    return map;
+  }
+  return variables;
+}
+
+/**
  * 替换文本中的 ${key} 占位符为真实数据
  * @param {string} text - 含占位符的文本
- * @param {object} variables - { key: value } 真实数据
+ * @param {object|array} variables - { key: value } 或字段数组
  * @returns {string} 替换后的文本
  */
 export function replaceVars(text, variables) {
-  if (!text) return '';
-  if (!variables) return text;
-  return String(text).replace(/\${(.+?)}/g, (match, key) => {
-    return variables[key] !== undefined ? variables[key] : match;
+  if (text == null || text === '') return '';
+  const map = toVariablesMap(variables);
+  if (!map || !Object.keys(map).length) return String(text);
+
+  // 兼容全角 ＄｛｝ 与 key 两侧空格
+  const normalized = String(text)
+    .replace(/\uFF04/g, '$') // ＄
+    .replace(/\uFF5B/g, '{') // ｛
+    .replace(/\uFF5D/g, '}'); // ｝
+
+  return normalized.replace(/\$\{\s*([^}]+?)\s*\}/g, (match, key) => {
+    const k = String(key).trim();
+    if (!k) return match;
+    return map[k] !== undefined && map[k] !== null ? String(map[k]) : match;
   });
 }
 

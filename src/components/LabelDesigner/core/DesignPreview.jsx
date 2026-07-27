@@ -21,7 +21,7 @@ export default defineComponent({
     // 真实数据，用于替换模板中的 ${key} 占位符
     // 格式: { asset_num: 'ZC-001', asset_name: '联想笔记本', ... }
     variables: {
-      type: Object,
+      type: [Object, Array],
       default: () => ({})
     }
   },
@@ -128,8 +128,12 @@ export default defineComponent({
         variables: props.variables
       };
 
-      switch (component.name) {
-        case 'barCode':
+      const name = component.name;
+      const type = component.type;
+      const isTable = name === 'table' || type === 'TableUi';
+
+      switch (true) {
+        case name === 'barCode' || type === 'BarcodeUi':
           return (
             <div
               class="barcode-wrap"
@@ -145,22 +149,22 @@ export default defineComponent({
               <PreviewBarcode {...sharedProps} />
             </div>
           );
-        case 'qrCode':
+        case name === 'qrCode' || type === 'QrCodeUi':
           return (
             <div class="qr-code-wrap" style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               <PreviewQrcode {...sharedProps} />
             </div>
           );
-        case 'xLine':
+        case name === 'xLine' || type === 'XLineUi':
           return <div class="x-line-wrap" style={selfStyle} />;
-        case 'yLine':
+        case name === 'yLine' || type === 'YLineUi':
           return <div class="y-line-wrap" style={selfStyle} />;
-        case 'rectangle':
+        case name === 'rectangle' || type === 'RectangleUi':
           return <div class="rectangle-wrap" style={{ ...selfStyle, width: '100%', height: '100%' }} />;
-        case 'table':
+        case isTable:
           return (
             <div class="table-wrap" style={{ width: '100%', height: '100%' }}>
-              <PreviewTable {...sharedProps} />
+              <PreviewTable component={component} variables={props.variables} />
             </div>
           );
         default:

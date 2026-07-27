@@ -118,6 +118,27 @@ const onValueChange = (e, key, index) => {
   actions.setTableRowValue(key, value, index);
 };
 
+const onDragOverCell = (e) => {
+  // 允许放置左侧动态变量；dragover 阶段多数浏览器读不到 getData
+  e.preventDefault();
+  e.stopPropagation();
+  if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+};
+
+/** 把左侧动态字段拖进单元格 / 表头，写入 ${key} */
+const onDropVariable = (e, { mode, key, rowIndex }) => {
+  const varKey = e.dataTransfer?.getData('variableKey');
+  if (!varKey) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const token = `\${${varKey}}`;
+  if (mode === 'header') {
+    actions.setTableColumnKey(key, token);
+  } else {
+    actions.setTableRowValue(key, token, rowIndex);
+  }
+};
+
 const handleAddRow = (index) => {
   const active = state.storeList.find((item) => item.id === props.elementId);
   if (active && active.props.tableData.length) {
@@ -225,7 +246,11 @@ const onColHandleClick = (e) => {
       <thead>
         <tr>
           <th v-for="(item, key, index) in tableData[0]" :key="index">
-            <div class="table-wrap__th">
+            <div
+              class="table-wrap__th"
+              @dragover="onDragOverCell"
+              @drop="onDropVariable($event, { mode: 'header', key })"
+            >
               <p
                 contenteditable="true"
                 :style="cellTextStyle"
@@ -277,7 +302,11 @@ const onColHandleClick = (e) => {
       <tbody>
         <tr v-for="(item, index) in tableData" :key="index" class="table-wrap__tr">
           <td v-for="(child, itemKey, itemIndex) in item" :key="itemIndex">
-            <div class="table-wrap__td">
+            <div
+              class="table-wrap__td"
+              @dragover="onDragOverCell"
+              @drop="onDropVariable($event, { mode: 'cell', key: itemKey, rowIndex: index })"
+            >
               <span
                 contenteditable="true"
                 :style="cellTextStyle"
