@@ -30,14 +30,14 @@ const qzStatusText = computed(() => {
 
 // 设备 demo 数据
 const deviceList = ref([
-  { asset_num: 'ZC-2026-0001', asset_name: '联想 ThinkPad X1', specification: 'i7/16G/512G', use_dept: '研发部', storage_place: 'A栋3楼', barcode_code: '697012345601', qr_code: 'https://ams.company.com/device/ZC-2026-0001', serial_no: 'SN20260722001' },
-  { asset_num: 'ZC-2026-0002', asset_name: '戴尔 U2723QE 显示器', specification: '27寸 4K', use_dept: '设计部', storage_place: 'B栋2楼', barcode_code: '697012345602', qr_code: 'https://ams.company.com/device/ZC-2026-0002', serial_no: 'SN20260722002' },
-  { asset_num: 'ZC-2026-0003', asset_name: 'MacBook Pro 14', specification: 'M3 Pro/18G/512G', use_dept: '研发部', storage_place: 'A栋3楼', barcode_code: '697012345603', qr_code: 'https://ams.company.com/device/ZC-2026-0003', serial_no: 'SN20260722003' },
-  { asset_num: 'ZC-2026-0004', asset_name: '华为 MateView', specification: '28.2寸 4K+', use_dept: '市场部', storage_place: 'C栋1楼', barcode_code: '697012345604', qr_code: 'https://ams.company.com/device/ZC-2026-0004', serial_no: 'SN20260722004' },
-  { asset_num: 'ZC-2026-0005', asset_name: '罗技 MX Master 3S', specification: '无线鼠标', use_dept: '研发部', storage_place: 'A栋3楼', barcode_code: '697012345605', qr_code: 'https://ams.company.com/device/ZC-2026-0005', serial_no: 'SN20260722005' },
-  { asset_num: 'ZC-2026-0006', asset_name: '群晖 DS923+', specification: '4盘位 NAS', use_dept: 'IT部', storage_place: '机房', barcode_code: '697012345606', qr_code: 'https://ams.company.com/device/ZC-2026-0006', serial_no: 'SN20260722006' },
-  { asset_num: 'ZC-2026-0007', asset_name: '索尼 WH-1000XM5', specification: '头戴降噪耳机', use_dept: '人事部', storage_place: 'A栋2楼', barcode_code: '697012345607', qr_code: 'https://ams.company.com/device/ZC-2026-0007', serial_no: 'SN20260722007' },
-  { asset_num: 'ZC-2026-0008', asset_name: 'iPad Pro 12.9', specification: 'M2/256G', use_dept: '设计部', storage_place: 'B栋2楼', barcode_code: '697012345608', qr_code: 'https://ams.company.com/device/ZC-2026-0008', serial_no: 'SN20260722008' }
+  { asset_num: 'ZC-2026-0001', asset_name: '联想 ThinkPad X1', specification: 'i7/16G/512G', use_dept: '研发部', storage_place: 'A栋3楼', barcode_code: '697012345601', qr_code: 'https://www.baidu.com/?n=1', serial_no: 'SN20260722001' },
+  { asset_num: 'ZC-2026-0002', asset_name: '戴尔 U2723QE 显示器', specification: '27寸 4K', use_dept: '设计部', storage_place: 'B栋2楼', barcode_code: '697012345602', qr_code: 'https://www.baidu.com/?n=2', serial_no: 'SN20260722002' },
+  { asset_num: 'ZC-2026-0003', asset_name: 'MacBook Pro 14', specification: 'M3 Pro/18G/512G', use_dept: '研发部', storage_place: 'A栋3楼', barcode_code: '697012345603', qr_code: 'https://www.baidu.com/?n=3', serial_no: 'SN20260722003' },
+  { asset_num: 'ZC-2026-0004', asset_name: '华为 MateView', specification: '28.2寸 4K+', use_dept: '市场部', storage_place: 'C栋1楼', barcode_code: '697012345604', qr_code: 'https://www.baidu.com/?n=4', serial_no: 'SN20260722004' },
+  { asset_num: 'ZC-2026-0005', asset_name: '罗技 MX Master 3S', specification: '无线鼠标', use_dept: '研发部', storage_place: 'A栋3楼', barcode_code: '697012345605', qr_code: 'https://www.baidu.com/?n=5', serial_no: 'SN20260722005' },
+  { asset_num: 'ZC-2026-0006', asset_name: '群晖 DS923+', specification: '4盘位 NAS', use_dept: 'IT部', storage_place: '机房', barcode_code: '697012345606', qr_code: 'https://www.baidu.com/?n=6', serial_no: 'SN20260722006' },
+  { asset_num: 'ZC-2026-0007', asset_name: '索尼 WH-1000XM5', specification: '头戴降噪耳机', use_dept: '人事部', storage_place: 'A栋2楼', barcode_code: '697012345607', qr_code: 'https://www.baidu.com/?n=7', serial_no: 'SN20260722007' },
+  { asset_num: 'ZC-2026-0008', asset_name: 'iPad Pro 12.9', specification: 'M2/256G', use_dept: '设计部', storage_place: 'B栋2楼', barcode_code: '697012345608', qr_code: 'https://www.baidu.com/?n=8', serial_no: 'SN20260722008' }
 ]);
 
 const selectedDeviceIds = ref(['ZC-2026-0001', 'ZC-2026-0002', 'ZC-2026-0003']);

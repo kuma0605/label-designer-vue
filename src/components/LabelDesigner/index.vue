@@ -89,6 +89,7 @@ watch(
     if (_isSyncingFromParent.value || _isUnmounting.value) return;
     if (!props.modelValue) return;
     emit('update:modelValue', {
+      ...props.modelValue,
       id: props.modelValue?.id,
       name: props.modelValue?.name || '标签模板',
       width: state.page.width,

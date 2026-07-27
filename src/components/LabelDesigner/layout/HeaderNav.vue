@@ -28,6 +28,7 @@ const handleClearCanvas = () => {
 
 const handleSave = () => {
   const template = {
+    ...props.modelValue,
     id: props.modelValue?.id,
     name: props.modelValue?.name || '标签模板',
     width: state.page.width,

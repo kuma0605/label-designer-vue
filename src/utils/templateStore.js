@@ -24,7 +24,7 @@ export const SAMPLE_PRINT_VARIABLES = {
   use_dept: '研发部',
   storage_place: 'A栋3楼',
   barcode_code: '697012345601',
-  qr_code: 'https://ams.company.com/device/ZC-2026-0001',
+  qr_code: 'https://www.baidu.com',
   serial_no: 'SN20260722001'
 };
 
@@ -98,11 +98,12 @@ function isLegacyDefaultSize(tpl) {
 
 function needsSeedContentReplace(tpl) {
   if (!SEED_TEMPLATE_IDS.has(tpl?.id)) return false;
-  // 旧 250×175、空画布、或种子版本落后 → 升级为最新默认模版
+  // 旧 250×175、空画布 → 升级为最新默认模版
   if (isLegacyDefaultSize(tpl)) return true;
   if (!Array.isArray(tpl.data) || tpl.data.length === 0) return true;
   const ver = Number(tpl.seedVersion);
-  return !Number.isFinite(ver) || ver < SEED_VERSION;
+  // 仅当明确落后于当前种子版本时覆盖；缺 seedVersion 但已有内容 → 只补版本号，不抹用户改动
+  return Number.isFinite(ver) && ver < SEED_VERSION;
 }
 
 /**
