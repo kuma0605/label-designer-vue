@@ -9,7 +9,7 @@ Demo 含两页：**模板管理**（设计/保存）与 **设备打印**（选�
 ## 核心特性
 
 1. **绝对定位矢量排版 (HTML-DOM)**：用 CSS 绝对定位排版，热敏打印时文字、线条、条码/二维码清晰、不易发糊。
-2. **动态变量绑定**：支持 `${asset_num}` 等占位符，模板与真实资产数据分离；预览/打印时注入 `variables` 替换。
+2. **动态变量绑定**：支持 `${asset_num}` 等占位符，模板与真实资产数据分离；预览/打印时注入 `variables` 替换。详见 [`docs/05_template-variables-and-device-print.md`](docs/05_template-variables-and-device-print.md)。
 3. **自闭环状态**：画布、物料树、选中态由 `designerState.js` 管理，**不依赖 Pinia / Vuex / Vue Router**。
 4. **精细交互**：拖拽、八向缩放、方向键微调、Delete/Backspace 删除、磁吸辅助线、框选多选。
 5. **条码 / 二维码**：`jsbarcode`、`qrcode`，属性变更时局部重绘。
@@ -154,3 +154,5 @@ await printLabelJobs([{ template, variables: device }], {
 ```
 
 正式环境模板/设备数据应由后台 API 提供；本仓库 demo 用 `localStorage` + `src/mock/defaultTemplates.json` 模拟。
+
+设备列表如何把动态数据填进模板：见 [`docs/05_template-variables-and-device-print.md`](docs/05_template-variables-and-device-print.md)。
