@@ -70,17 +70,17 @@ const getItemStyle = computed(() => {
     '--table-border-style': props.borderStyle || 'solid',
     '--table-border-width': `${Number.isFinite(width) && width > 0 ? width : 2}px`,
     '--table-row-count': String(Math.max(tableRowCount.value, 1)),
-    fontFamily: '"SimHei", "Microsoft YaHei", Arial, sans-serif',
+    fontFamily: 'Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif',
     lineHeight: '1.25'
   };
 });
 
 const cellTextStyle = computed(() => ({
   textAlign: props.align || 'left',
-  fontWeight: props.isBold ? 700 : 400,
+  fontWeight: props.isBold ? 'bold' : 'normal',
   fontSize: formattedFontSize.value,
   lineHeight: '1.25',
-  fontFamily: '"SimHei", "Microsoft YaHei", Arial, sans-serif'
+  fontFamily: 'Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif'
 }));
 
 const columns = computed(() => {
@@ -357,7 +357,7 @@ const onColHandleClick = (e) => {
   --table-border-color: #000;
   position: relative;
   line-height: 1.25;
-  font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif;
+  font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
 
   &__table {
     width: 100%;
@@ -396,11 +396,6 @@ const onColHandleClick = (e) => {
 
   th {
     background-color: #fafafa;
-  }
-
-  &.is-bold th p,
-  &.is-bold td span {
-    font-weight: 700 !important;
   }
 
   &__insert {
@@ -461,7 +456,7 @@ const onColHandleClick = (e) => {
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: 1.25;
-    font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif;
+    font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
   }
 
   td span {
@@ -471,7 +466,7 @@ const onColHandleClick = (e) => {
     overflow: hidden;
     word-break: break-all;
     line-height: 1.25;
-    font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif;
+    font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
   }
 }
 </style>

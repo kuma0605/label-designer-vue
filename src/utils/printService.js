@@ -28,7 +28,7 @@ const PRINT_CSS = `
     padding: 0;
     background: #fff;
     color: #000000;
-    font-family: "SimHei", "Microsoft YaHei", "Arial", sans-serif;
+    font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -45,21 +45,8 @@ const PRINT_CSS = `
   }
   .template-wrap { position: relative; overflow: hidden; background: #fff; color: #000000; }
   .component { position: absolute; box-sizing: border-box; color: #000000; }
-  .detail {
-    color: #000000 !important;
-    font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif !important;
-  }
-  /* QZ WebKit 对中文加粗常失效：字重 + 微描边保证热敏可见 */
-  .detail[style*="font-weight: bold"],
-  .detail[style*="font-weight:bold"],
-  .detail[style*="font-weight: 700"],
-  .detail[style*="font-weight:700"],
-  .table-wrap.is-bold th p,
-  .table-wrap.is-bold td span {
-    font-weight: 700 !important;
-    -webkit-text-stroke: 0.45px #000;
-    paint-order: stroke fill;
-  }
+  /* 位图/共用：不要 SimHei + text-stroke，热敏上中文容易糊成一团 */
+  .detail { color: #000000 !important; font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif; }
   .barcode-wrap {
     display: flex;
     align-items: center;
@@ -75,7 +62,7 @@ const PRINT_CSS = `
     text-align: center;
     margin: 2px 0 0 0;
     color: #000000;
-    font-family: "SimHei", "Microsoft YaHei", "Arial", sans-serif;
+    font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
   }
   .qr-code-wrap {
     width: 100%;
@@ -91,7 +78,7 @@ const PRINT_CSS = `
     height: 100%;
     position: relative;
     line-height: 1.25;
-    font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif;
+    font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
   }
   .table-wrap__table {
     width: 100%;
@@ -117,7 +104,7 @@ const PRINT_CSS = `
     border-bottom: var(--table-border-width, 2px) var(--table-border-style, solid) #000;
     line-height: 1.25;
     height: inherit;
-    font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif;
+    font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
   }
   .table-wrap th {
     background-color: #fafafa;
@@ -129,7 +116,7 @@ const PRINT_CSS = `
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: 1.25;
-    font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif !important;
+    font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
   }
   .table-wrap td span {
     display: block;
@@ -137,11 +124,26 @@ const PRINT_CSS = `
     overflow: hidden;
     word-break: break-all;
     line-height: 1.25;
-    font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif !important;
+    font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
   }
   @media print {
     @page { margin: 0; }
     body { margin: 0; }
+  }
+`;
+
+/** 仅 QZ HTML：补加粗（位图截图不要用，否则热敏中文易糊） */
+const QZ_HTML_BOLD_CSS = `
+  .detail[style*="font-weight: bold"],
+  .detail[style*="font-weight:bold"],
+  .detail[style*="font-weight: 700"],
+  .detail[style*="font-weight:700"],
+  .table-wrap.is-bold th p,
+  .table-wrap.is-bold td span {
+    font-family: "Microsoft YaHei", "SimHei", Arial, sans-serif !important;
+    font-weight: 700 !important;
+    -webkit-text-stroke: 0.35px #000;
+    paint-order: stroke fill;
   }
 `;
 
@@ -244,6 +246,7 @@ export function buildPageHtml(page) {
       background: #ffffff;
     }
     ${PRINT_CSS}
+    ${QZ_HTML_BOLD_CSS}
   </style>
 </head>
 <body><div class="print-label-page"><div class="print-label-inner">${page.html}</div></div></body>

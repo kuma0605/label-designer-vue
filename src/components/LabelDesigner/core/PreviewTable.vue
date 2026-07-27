@@ -23,12 +23,11 @@ const formattedFontSize = computed(() => {
 
 const cellTextStyle = computed(() => ({
   textAlign: align.value || 'left',
-  fontWeight: isBold.value ? 700 : 400,
+  fontWeight: isBold.value ? 'bold' : 'normal',
   fontSize: formattedFontSize.value,
-  // 固定行高倍数，降低 QZ WebKit / Chrome 字体度量差
+  // 固定行高倍数，降低引擎间度量差；字体保持偏细栈，避免位图热敏糊字
   lineHeight: '1.25',
-  // 中文优先：QZ 下 Arial 回退字重经常不加粗
-  fontFamily: '"SimHei", "Microsoft YaHei", Arial, sans-serif'
+  fontFamily: 'Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif'
 }));
 
 /** 原始列 key（可能含 ${var}），用于取数；展示用 label（已替换） */
@@ -131,7 +130,7 @@ const columnWidths = computed(() => {
   --table-border-color: #000;
   position: relative;
   line-height: 1.25;
-  font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif;
+  font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
 }
 
 .preview-table-wrap :deep(.table-wrap__table) {
@@ -174,7 +173,7 @@ const columnWidths = computed(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.25;
-  font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif;
+  font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
 }
 
 .preview-table-wrap :deep(td span) {
@@ -184,11 +183,6 @@ const columnWidths = computed(() => {
   overflow: hidden;
   word-break: break-all;
   line-height: 1.25;
-  font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif;
-}
-
-.preview-table-wrap.is-bold :deep(th p),
-.preview-table-wrap.is-bold :deep(td span) {
-  font-weight: 700 !important;
+  font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
 }
 </style>
