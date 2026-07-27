@@ -11,10 +11,10 @@ export const TEMPLATES_STORAGE_KEY = 'label_templates_v3';
 const SEED_TEMPLATE_IDS = new Set(['asset-tag-default', 'tpl_xqu324m9']);
 
 /**
- * 种子版本：仅用于「旧尺寸 / 缺版本」一次性迁移。
- * 不要在每次改 defaultTemplates.json 时依赖它强推覆盖用户已编辑副本。
+ * 种子版本：默认模板 id 在 seedVersion 落后时一次性升级为最新种子。
+ * 自定义模板（非 SEED_TEMPLATE_IDS）不会被覆盖。
  */
-export const SEED_VERSION = 1;
+export const SEED_VERSION = 3;
 
 /** 设计器打印预览用的示例变量（非真实设备） */
 export const SAMPLE_PRINT_VARIABLES = {
@@ -98,8 +98,11 @@ function isLegacyDefaultSize(tpl) {
 
 function needsSeedContentReplace(tpl) {
   if (!SEED_TEMPLATE_IDS.has(tpl?.id)) return false;
-  // 仅旧 250×175 画布强制换成当前种子；已是 80×60 的用户编辑予以保留
-  return isLegacyDefaultSize(tpl);
+  // 旧 250×175、空画布、或种子版本落后 → 升级为最新默认模版
+  if (isLegacyDefaultSize(tpl)) return true;
+  if (!Array.isArray(tpl.data) || tpl.data.length === 0) return true;
+  const ver = Number(tpl.seedVersion);
+  return !Number.isFinite(ver) || ver < SEED_VERSION;
 }
 
 /**

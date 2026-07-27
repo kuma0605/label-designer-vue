@@ -4,7 +4,7 @@
     "name": "中医院模版 (80×60mm)",
     "width": 400,
     "height": 300,
-    "seedVersion": 1,
+    "seedVersion": 3,
     "data": [
       {
         "name": "customText",
@@ -13,7 +13,7 @@
         "title": "自定义文本",
         "instance": true,
         "tag": "span",
-        "updateId": "1784882694350",
+        "updateId": "1785117531267",
         "position": {
           "clientX": 72.5,
           "clientY": 9.5
@@ -85,14 +85,14 @@
         },
         "id": "el_mepvg6sk",
         "rect": {
-          "x": 434.5,
+          "x": 608.5,
           "y": 319,
           "width": 246.109375,
           "height": 34,
           "top": 319,
-          "right": 680.609375,
+          "right": 854.609375,
           "bottom": 353,
-          "left": 434.5
+          "left": 608.5
         }
       },
       {
@@ -100,7 +100,7 @@
         "type": "TableUi",
         "classify": "TableMenu",
         "title": "列表",
-        "updateId": "1784882694351",
+        "updateId": "1785117652514",
         "instance": true,
         "tag": "div",
         "position": {
@@ -108,8 +108,8 @@
           "clientY": 49
         },
         "default": {
-          "height": 237,
-          "width": 375,
+          "height": 221,
+          "width": 372,
           "x": 11,
           "y": 49
         },
@@ -118,9 +118,8 @@
           "textData": []
         },
         "props": {
-        "borderStyle": "solid",
-        "borderWidth": 2,
-        "headerBold": true,
+          "borderStyle": "solid",
+          "headerBold": true,
           "bodyBold": true,
           "fontSize": "16px",
           "columnWidths": [
@@ -130,38 +129,39 @@
           "tableData": [
             {
               "名称": "规格",
-              "运维管理交换机": "S5130S-52S-E"
+              "${asset_num}": "S5130S-52S-E"
             },
             {
               "名称": "入库",
-              "运维管理交换机": "2021-06-30"
+              "${asset_num}": "2021-06-30"
             },
             {
               "名称": "科室",
-              "运维管理交换机": "信息科"
+              "${asset_num}": "信息科"
             },
             {
               "名称": "厂家",
-              "运维管理交换机": "/"
+              "${asset_num}": "/"
             },
             {
               "名称": "编码",
-              "运维管理交换机": "Z020240905005727"
+              "${asset_num}": "Z020240905005727"
             }
           ],
           "align": "left",
-          "isBold": true
+          "isBold": true,
+          "borderWidth": 2
         },
         "id": "el_a1tl1ujq",
         "rect": {
-          "x": 373,
+          "x": 547,
           "y": 358.5,
-          "width": 375,
-          "height": 237,
+          "width": 372,
+          "height": 221,
           "top": 358.5,
-          "right": 748,
-          "bottom": 595.5,
-          "left": 373
+          "right": 919,
+          "bottom": 579.5,
+          "left": 547
         }
       },
       {
@@ -171,10 +171,10 @@
         "title": "二维码",
         "tag": "img",
         "instance": true,
-        "updateId": "1784882694352",
+        "updateId": "1785117679822",
         "position": {
-          "clientX": 270.5,
-          "clientY": 130.5
+          "clientX": 267.5,
+          "clientY": 118.5
         },
         "variable": {
           "enable": true,
@@ -200,8 +200,8 @@
         "default": {
           "height": 111,
           "width": 115,
-          "x": 270.5,
-          "y": 130.5
+          "x": 267.5,
+          "y": 118.5
         },
         "props": {
           "data": "${qr_code}",
@@ -214,14 +214,14 @@
         },
         "id": "el_q6zoy8jl",
         "rect": {
-          "x": 632.5,
-          "y": 440,
+          "x": 803.5,
+          "y": 428,
           "width": 115,
           "height": 111,
-          "top": 440,
-          "right": 747.5,
-          "bottom": 551,
-          "left": 632.5
+          "top": 428,
+          "right": 918.5,
+          "bottom": 539,
+          "left": 803.5
         }
       },
       {
@@ -231,31 +231,31 @@
         "title": "矩形",
         "tag": "div",
         "instance": true,
-        "updateId": "1784882700478",
+        "updateId": "1785117698160",
         "position": {
-          "clientX": 272.5,
-          "clientY": 127.5
+          "clientX": 270.5,
+          "clientY": 117.5
         },
         "default": {
-          "height": 118,
-          "width": 112,
-          "x": 272.5,
-          "y": 127.5
+          "height": 114,
+          "width": 111,
+          "x": 270.5,
+          "y": 117.5
         },
         "props": {
-          "borderWidth": 1,
+          "borderWidth": 2,
           "lineType": "solid"
         },
         "id": "el_y1zjrf0j",
         "rect": {
-          "x": 634.5,
-          "y": 437,
-          "width": 112,
-          "height": 118,
-          "top": 437,
-          "right": 746.5,
-          "bottom": 555,
-          "left": 634.5
+          "x": 806.5,
+          "y": 427,
+          "width": 111,
+          "height": 114,
+          "top": 427,
+          "right": 917.5,
+          "bottom": 541,
+          "left": 806.5
         },
         "variable": {
           "enable": false,
