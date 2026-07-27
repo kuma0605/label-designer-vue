@@ -13,11 +13,12 @@ Demo 含两页：**模板管理**（设计/保存）与 **设备打印**（选�
 3. **自闭环状态**：画布、物料树、选中态由 `designerState.js` 管理，**不依赖 Pinia / Vuex / Vue Router**。
 4. **精细交互**：拖拽、八向缩放、方向键微调、Delete/Backspace 删除、磁吸辅助线、框选多选。
 5. **条码 / 二维码**：`jsbarcode`、`qrcode`，属性变更时局部重绘。
-6. **双通道打印**：
-   - **浏览器**：`DesignPreview` 渲染后 `window.print`（适合验版式）。
-   - **QZ Tray**：同一预览经 `html2canvas` 转 PNG，再交给 QZ 打到指定打印机（适合标签机）。
+6. **三通道打印**（设备打印页可选）：
+   - **浏览器**（`browser`）：`DesignPreview` 渲染后 `window.print`（验版）。
+   - **QZ HTML**（`qz-html`，默认推荐译维 A42）：完整 HTML → QZ `format: 'html'` → Windows 驱动。
+   - **QZ 位图**（`qz-image`）：同一预览经 `html2canvas`（scale 3）转 PNG → QZ `format: 'image'`。
 
-尺寸约定：**1mm = 5px**（例如 50×35mm 标签画布为 `250 × 175`）。
+尺寸约定：**1mm = 5px**（例如 50×35mm 标签画布为 `250 × 175`）。热敏机纸张 / 裁切 / 字重等实践见 [`docs/04_yiwei-a42-qz-tray-bitmap-print-guide.md`](docs/04_yiwei-a42-qz-tray-bitmap-print-guide.md)（发表稿：[`docs/04_yiwei-a42-qz-tray-bitmap-print-guide.publish.md`](docs/04_yiwei-a42-qz-tray-bitmap-print-guide.publish.md)）。
 
 ---
 
@@ -48,12 +49,12 @@ npm run build
 
 1. 安装并启动 [QZ Tray](https://qz.io/download)
 2. 打开「设备资产管理」→ 勾选设备 → 批量打印
-3. 打印方式选 **QZ Tray** → 刷新打印机 → 选择打印机 → 确认打印
+3. 打印方式选 **QZ Tray HTML**（推荐 A42）或 **QZ Tray 位图** → 刷新打印机 → 选择打印机 → 确认打印
 4. 未配置证书时首次会弹授权框，点 **Allow**（可勾选 Remember）
 
-无标签机时可用系统 PDF 打印机验证内容与尺寸。
+无标签机时可用 **浏览器打印** 或系统 PDF 打印机验版式与尺寸。
 
-静默打印：把 QZ Demo 的 `digital-certificate.txt` + `private-key.pem` 放到 [`public/certs/`](public/certs/README.md)，前端会自动签名，不再弹窗。换电脑时网站证书不变，另一台用 QZ **Site Manager → Browse** 导入同一份信任证书即可。
+静默打印：把 QZ Demo 的 `digital-certificate.txt` + `private-key.pem` 放到 [`public/certs/`](public/certs/README.md)，前端会自动签名，不再弹窗。证书与私钥已在 `.gitignore` 中忽略，**勿提交公开仓库**。换电脑时网站证书不变，另一台用 QZ **Site Manager → Browse** 导入同一份信任证书即可。
 
 ---
 
@@ -144,12 +145,12 @@ const onSaveTemplate = (tpl) => {
 import { printLabelJobs } from '@/utils/printService.js';
 
 // 浏览器验版
-await printLabelJobs([{ template, variables: device }]);
+await printLabelJobs([{ template, variables: device }], { adapter: 'browser' });
 
-// QZ 打到指定打印机
+// QZ HTML（推荐 A42）/ 位图 → 指定打印机
 await printLabelJobs([{ template, variables: device }], {
-  adapter: 'qz',
-  printer: 'Zebra_Printer'
+  adapter: 'qz-html', // 或 'qz-image'；'qz' 与 'qz-html' 等价
+  printer: 'Your_Printer_Name'
 });
 ```
 

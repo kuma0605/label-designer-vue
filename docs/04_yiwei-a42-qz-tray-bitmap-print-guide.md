@@ -1,226 +1,176 @@
-# Web端热敏标签打印完整解决方案：Vue 3 + QZ Tray + 译维A42 (Windows驱动/位图模式) 实践指南
+# Web 端热敏标签打印：Vue 3 + QZ Tray + 译维 A42 实践指南
 
-> **摘要**：本文详细梳理了在 Vue 3 前端项目中，如何通过 **QZ Tray** 静默打印服务、**译维 A42 热敏打印机 (Windows GDI 驱动)** 以及 **位图/HTML 渲染模式**，实现高性能、像素级对齐、无跨页/跳页的高可用 Web 标签打印系统。总结了针对物理纸张尺寸错配、QZ 方向翻转陷阱、浅色字断针虚影、多余空白尾页及双边框等经典坑点的全套解决方案。
+> **摘要**：本仓库的 Vue 3 标签设计器通过 **QZ Tray** 对接 **译维 A42**（Windows GDI 驱动），支持 **QZ HTML**、**QZ 位图**、浏览器原生三种输出。本文说明实现约定，以及纸张错配、裁切、双边框、字重、画布/预览错位等常见问题与解法。  
+> 动态变量注入见 [`05_template-variables-and-device-print.md`](./05_template-variables-and-device-print.md)；静默证书见 [`public/certs/README.md`](../public/certs/README.md)。  
+> 对外发表友好版本（正文更自洽、可直接粘贴）：[`04_yiwei-a42-qz-tray-bitmap-print-guide.publish.md`](./04_yiwei-a42-qz-tray-bitmap-print-guide.publish.md)。
 
 ---
 
-## 一、 架构设计与整体流程
+## 一、架构与数据流
 
-### 1.1 传统方案 vs 本方案对比
+### 1.1 方案对比
 
-在传统热敏标签打印中，通常有以下两种路线：
-
-| 维度 | TSPL/CPCL 原始指令模式 | 本方案 (Vue 3 + QZ Tray + Windows GDI / 位图模式) |
+| 维度 | TSPL / CPCL 指令 | 本方案（Vue 3 + QZ + Windows 驱动） |
 | :--- | :--- | :--- |
-| **开发成本** | 需手写低级指令，定位复杂，难以预览 | 采用 Vue 3 可视化拖拽组件，**所见即所得** |
-| **打印机兼容性** | 绑定特定品牌指令集 (如 TSC/Zebra) | **驱动通用**，只要 Windows 能安装驱动即可打印 |
-| **富文本与排版** | 复杂表格、二维码、自适应字号实现困难 | 完美支持 CSS 任意排版、多列表格、图片与二维码 |
-| **维护性** | 修改模板需重新编写逻辑指令 | 修改 JSON 模板即可，支持动态变量插值 |
+| 开发 | 手写指令，难预览 | 可视化拖拽，所见即所得 |
+| 兼容性 | 绑定品牌指令集 | 有 Windows 驱动即可 |
+| 排版 | 表格 / 二维码成本高 | CSS + 组件，JSON 模板 |
+| 维护 | 改指令 | 改模板 / `${变量}` |
 
-### 1.2 系统架构与数据流
+### 1.2 打印通道（设备打印页）
+
+| 适配器 | 值 | 流程 |
+| :--- | :--- | :--- |
+| QZ HTML | `qz-html`（默认，推荐 A42） | `DesignPreview` 渲染完整 HTML 文档 → QZ `format: 'html'` → 驱动 |
+| QZ 位图 | `qz-image` | 同上渲染 → `html2canvas` scale 3 → PNG → QZ `format: 'image'` |
+| 浏览器 | `browser` | `window.print`（验版） |
 
 ```mermaid
 flowchart TD
-    A[模板 JSON + 动态资产数据] --> B[Vue 3 / JSX 虚拟画布组件]
-    B --> C{打印模式选择}
-    C -->|位图模式 QZ-Image| D[html2canvas 3x 高清渲染]
-    C -->|HTML模式 QZ-Html| E[WebKit HTML/CSS 构建]
-    D --> F[PNG Base64 像素流]
-    E --> G[HTML 文本流]
-    F --> H[QZ Tray WebSocket 服务]
-    G --> H
-    H --> I[Windows Print Spooler 打印后台]
-    I --> J[译维 A42 热敏打印机]
+  A["模板 JSON + 设备 variables"] --> B["DesignPreview 离屏渲染"]
+  B --> C{adapter}
+  C -->|qz-image| D["html2canvas x3 to PNG base64"]
+  C -->|qz-html| E["buildPageHtml + pageWidth/Height"]
+  C -->|browser| F["window.print"]
+  D --> G["QZ Tray"]
+  E --> G
+  G --> H["Windows Spooler / Yiwei A42"]
 ```
 
----
-
-## 二、 核心技术实现细节
-
-### 2.1 画布基准与自适应缩放机制
-
-为了保证屏幕视口（通常为 `96 DPI`）与热敏打印硬件（通常为 `203 DPI` 或 `300 DPI`）精确对齐，系统建立了统一的物理换算约定：
-
-- **物理换算比例**：`1 mm = 5 px`
-- **标准标签规格**：以 `80 mm × 60 mm` 为例，设计器画布物理像素为 **`400 px × 300 px`**。
-- **自适应 CSS 缩放公式**：
-  $$\text{Scale} = \frac{\text{width}_{\text{mm}}}{\text{width}_{\text{px}}}$$
-  在打印 HTML 构建时应用：
-  ```css
-  transform: scale(calc(${widthMm}mm / ${page.width}px));
-  transform-origin: 0 0;
-  ```
-
-### 2.2 位图打印模式 (`qzImagePrint`) 渲染逻辑
-
-利用 `html2canvas` 在浏览器内存中将 DOM 转换为无损 PNG 图像，回避了不同操作系统与打印机驱动对 HTML 字体渲染的细微差异：
-
-```javascript
-// src/utils/printService.js
-export async function pagesToPngBase64(pages) {
-  const host = document.createElement('div');
-  host.style.cssText = 'position:fixed;left:-99999px;top:0;background:#fff;pointer-events:none;';
-  document.body.appendChild(host);
-
-  const results = [];
-  try {
-    for (const page of pages) {
-      const wrap = document.createElement('div');
-      wrap.style.cssText = `width:${page.width}px;height:${page.height}px;background:#fff;overflow:hidden;position:relative;`;
-      wrap.innerHTML = `<style>${PRINT_CSS}</style>${page.html}`;
-      host.appendChild(wrap);
-
-      await sleep(50);
-      const canvas = await html2canvas(wrap, {
-        backgroundColor: '#ffffff',
-        scale: 3, // 300 DPI 高清高黑度渲染
-        useCORS: true,
-        allowTaint: false,
-        width: page.width,
-        height: page.height,
-        x: 0,
-        y: 0,
-        scrollX: 0,
-        scrollY: 0,
-        logging: false
-      });
-
-      const dataUrl = canvas.toDataURL('image/png');
-      const base64 = dataUrl.replace(/^data:image\/png;base64,/, '');
-      results.push({
-        base64,
-        width: page.width,
-        height: page.height,
-        widthMm: page.width / PX_PER_MM,
-        heightMm: page.height / PX_PER_MM
-      });
-      wrap.remove();
-    }
-  } finally {
-    host.remove();
-  }
-  return results;
-}
-```
+实现入口：`src/utils/printService.js`（`printLabelJobs` / `qzHtmlPrint` / `qzImagePrint`）。
 
 ---
 
-## 三、 避坑指南与踩坑全锦囊 (Troubleshooting Guide)
+## 二、实现约定
 
-在译维 A42 热敏打印机与 QZ Tray 的实际对接过程中，我们攻克了 6 个关键问题，整理如下：
+### 2.1 尺寸
 
-### 陷阱 1：QZ Tray 宽高自动翻转导致单张标签跨 2 张纸
+- **1 mm = 5 px**（`PX_PER_MM`）
+- 示例：80×60 mm → 画布 **400×300 px**
+- 物理纸张：`size: { width: widthMm, height: heightMm }`，`units: 'mm'`
+- **不要**向 `qz.configs.create` 传入 `orientation`（见陷阱 1）
 
-- **现象**：排版无误，但打印 1 张标签时，打印机强制走纸 80mm（打完 60mm 标签后，将剩下的 20mm 溢出打印到第 2 张纸上）。
-- **根源**：在调用 QZ Tray 的 `qz.configs.create()` 时，若传入了 `orientation: 'landscape'`，Java `PrintService` 内部会将自定义尺寸 `size: { width: 80, height: 60 }` **自动互换为 `60mm × 80mm`**，导致驱动误以为纸高是 80mm。
-- **解法**：从 QZ 配置中**完全移除 `orientation` 参数**（或设为 `null`），让 QZ Tray 直接原样把 `width: 80, height: 60` 交付给 Windows 驱动：
-  ```javascript
-  // 修正后的 QZ 配置
-  const config = qz.configs.create(printerName, {
-    units: 'mm',
-    size: { width: widthMm, height: heightMm },
-    margins: 0,
-    colorType: 'grayscale',
-    interpolation: 'nearest-neighbor',
-    scaleContent: true,
-    rasterize: true,
-    jobName: `标签打印`
-  });
-  ```
+### 2.2 QZ HTML
 
----
+曾用 `transform: scale(calc(mm / px))` 把设计像素压进毫米视口，在 QZ 内嵌 WebKit 上不可靠（易裁切或不出纸），已放弃。
 
-### 陷阱 2：Windows 驱动默认底纸尺寸错配导致裁切与跨页
+推荐做法：
 
-- **现象**：打印出来的标签**左侧 1/5 被裁切丢弃**，且上下内容被分成 2 张纸输出。
-- **根源**：Windows 操作系统打印后台 (Spooler) 拥有最高控制权。若 Windows 【打印首选项】中的默认底纸停留在 `50×35 mm`：
-  1. 80mm 宽的图像强塞进 50mm 驱动视口 $\rightarrow$ **左侧 30mm 被截断**。
-  2. 60mm 高的图像塞进 35mm 驱动视口 $\rightarrow$ **溢出换页输出到 2 张纸**。
-- **解法**：在 Windows 控制面板中完成驱动底纸配置：
-  1. 打开控制面板 $\rightarrow$ 设备和打印机 $\rightarrow$ 右键 **译维 A42** $\rightarrow$ 点击 **【打印首选项】**。
-  2. 在【页面设置】中新建规格：**宽度 `80 mm`**，**高度 `60 mm`**，**边距 `0`**。
-  3. 将该 `80×60mm` 规格设为打印机的默认底纸。
-  4. 长按打印机上的进纸按键，执行硬件缝隙感应校准。
+1. HTML 文档按**设计像素**出图（`body` / `.print-label-inner` = `width × height` px），不做 transform 缩放。
+2. 数据项带抓取视口（与 `units: 'mm'` 一致）：
 
----
+   ```js
+   pageWidth: page.width / CSS_PX_PER_MM,   // 96DPI 网页毫米宽
+   pageHeight: page.height / CSS_PX_PER_MM,
+   ```
 
-### 陷阱 3：单页打印后多吐出一张空白页
+3. `config.size` 仍为标签物理 mm；`scaleContent: true` 将抓取结果缩到纸张。
 
-- **现象**：打印正文标签正常，但每次打印完毕后，打印机总是会额外多吐出一张完全空白的标签纸。
-- **根源**：单页 HTML 样式中包含了 `page-break-after: always;`，WebKit 引擎在渲染单页 HTML 时强制在末尾插入了第 2 个空白页节点。
-- **解法**：在单页及尾页样式中强制禁用换页，并清理 DOM 尾部的多余换行符：
-  ```css
-  .print-label-page {
-    width: 80mm;
-    height: 60mm;
-    position: relative;
-    overflow: hidden;
-    background: #ffffff;
-    page-break-after: avoid !important;
-    break-after: avoid !important;
-  }
-  ```
+注意：`pageWidth` / `pageHeight` 若误按「英寸数值」传入而 `units: 'mm'`，视口会变成几毫米，表现为 **HTML 模式不出纸**；位图不受影响。
+
+### 2.3 QZ 位图
+
+- 离屏挂载已替换变量的 HTML，注入共用 `PRINT_CSS`，`html2canvas({ scale: 3 })`。
+- 与画布同源度量，表格 / 二维码对齐通常比 HTML 模式更稳。
+- 字重与 HTML 共用雅黑 + `700`（不用 `text-stroke`，避免热敏糊字）。
+
+### 2.4 表格边框
+
+`html2canvas` **不合并** `border-collapse: collapse`，四边都画会导致相邻线约 2 倍粗。
+
+约定：`border-collapse: separate; border-spacing: 0`；`table` 画上 / 左，`th` / `td` 画右 / 下（单边描边）。边框画在 `th` / `td` 上，保证同行左右列同高。
+
+### 2.5 字重（位图 / HTML 统一）
+
+- 加粗：`Microsoft YaHei` + `font-weight: 700`
+- **不要**用 `SimHei` 优先 + `-webkit-text-stroke` 做「合成加粗」（位图热敏易糊成一团）
 
 ---
 
-### 陷阱 4：细字体线条断针、虚影、显色浅像缺油墨
+## 三、避坑指南
 
-- **现象**：粗体字正常，但常规体或细汉字（如“资产编号”中的 1px 笔画）线条断断续续、显色极淡。
-- **根源**：热敏打印机依靠加热使纸张变黑，无半透明灰阶。网页默认浅灰色抗锯齿 (Anti-Aliasing) 在 203 DPI 热敏阈值下被二值化丢弃，导致笔画断裂。
+统一格式：**现象 → 原因 → 解法**。
+
+### 陷阱 1：宽高互换、跨页
+
+- **现象**：一张标签打成两张纸高度。
+- **原因**：QZ `orientation` 与驱动纸张方向互相干扰。
+- **解法**：`qz.configs.create` **不要**传 `orientation`；只传 `units: 'mm'` + `size: { width, height }`。
+
+### 陷阱 2：左右裁切、上下跨页
+
+- **现象**：内容被切边，或一张打成两张。
+- **原因**：Windows 驱动默认底纸不是标签实际尺寸（如不是 80×60）。
+- **解法**：打印首选项新建并默认 **80×60 mm、边距 0**；开机 / 换纸后长按进纸键做缝隙学习。
+
+### 陷阱 3：多吐空白页
+
+- **现象**：正文后再吐一张空白标签。
+- **原因**：无意义的 `page-break` 或逐张 `qz.print` 时仍强制分页。
+- **解法**：单页使用 `page-break-after: avoid`；避免无意义的 always 分页。
+
+### 陷阱 4：细笔画断针 / 显色浅
+
+- **现象**：细线发虚、整体偏淡。
+- **原因**：热敏浓度 / 速度与位图分辨率不足。
+- **解法**：纯黑 `#000`；位图 `scale: 3`；驱动浓度 12～14、速度 2.0～3.0 in/s；字重见 §2.5。
+
+### 陷阱 5：表格线外细内粗 / 双边框
+
+- **现象**：内线明显比外框粗。
+- **原因**：`border-collapse: collapse` 在 html2canvas 中仍会叠线。
+- **解法**：单边描边（§2.4）；内层 `div` 不再画框。
+
+### 陷阱 6：画布与预览矩形 / 二维码相对表格错位
+
+- **现象**：预览或打印里二维码相对表格上移 / 多出一小横。
+- **原因**：画布与预览度量不一致；行高按 `default.height` 写死 px，未扣组件边框。
 - **解法**：
-  1. **前端 CSS 强化**：
-     ```css
-     * {
-       box-sizing: border-box;
-       -webkit-font-smoothing: antialiased;
-       text-rendering: geometricPrecision;
-     }
-     html, body, .component {
-       color: #000000 !important;
-       font-family: "SimHei", "Microsoft YaHei", sans-serif;
-     }
-     ```
-  2. **提高采样分辨率**：将 `html2canvas` 的采样倍率提高至 **`scale: 3`** (相当于 300 DPI 高清化)。
-  3. **驱动硬件调节**：在 Windows【打印首选项】中，将 **打印浓度 (Darkness)** 调高至 **`12 ~ 14`**，并将 **打印速度 (Speed)** 降至 **`2.0 ~ 3.0 in/s`**（给予打印头充足的加热反应时间）。
+  1. 画布 / 预览统一：`1px` 透明边框（线 / 矩形除外）；表格 `line-height` 勿继承文本的 1.5。
+  2. 表格行高按容器 `calc(100% / 行数)` 均分，**勿**用 `default.height` 写死 px。
+  3. 二维码 / 矩形绝对坐标尽量贴行线，避免底边落在单元格内。
+
+### 陷阱 7：QZ HTML 只打出左上约 3/4 或不出纸
+
+- **现象 A（裁切）**：只出左上角。  
+  **原因**：抓取视口按驱动纸张 mm × 96DPI，小于设计像素。  
+  **解法**：§2.2 用 mm 单位的 `pageWidth` / `pageHeight` 盖住设计像素。
+- **现象 B（不出纸）**：位图可打、HTML 不行。  
+  **原因**：`pageWidth` 单位与 `units: 'mm'` 不一致（误传英寸数值）。  
+  **解法**：视口一律按毫米数值传入。
+
+### 陷阱 8：默认模板保存后又被种子盖回
+
+- **现象**：二维码 / 条码改成固定值并保存，再打开又变回 `${qr_code}`。
+- **原因**：v-model 回写丢掉 `seedVersion`，加载时被当成旧种子整份覆盖。
+- **解法**：保存与同步保留 `seedVersion`；有内容仅缺版本时只补版本、不覆盖内容（见 `src/utils/templateStore.js`）。
 
 ---
 
-### 陷阱 5：表格位图打印产生重影“双边框”
+## 四、部署 Checklist
 
-- **现象**：表格线条粗细不一，看起来像叠加了双边框。
-- **根源**：全局 `PRINT_CSS` 对 `th/td` 强加了 `border: 1px solid #000`，而 `PreviewTable.vue` 内层 `div` 也自带边框，两重边框叠加；同时 `TableUi.vue` 带有 `cellspacing="1px"`。
-- **解法**：
-  1. 移除 `PRINT_CSS` 中对 `th/td` 的多余 `border` 声明。
-  2. 将表格标签属性统一改为 `cellspacing="0"`，使用 CSS `border-collapse: collapse;` 保持标准的 1px 干净单边框。
-
----
-
-### 陷阱 6：设计器编辑画布与打印预览像素错位
-
-- **现象**：在设计器中矩形框刚好盖住 3 行表格，但在预览和打印时矩形框底部超出了 3 行。
-- **根源**：
-  1. 物料拖拽容器 [Drag.vue](file:///Users/dylan/CodeHub/HanTian/label-designer-v3/src/components/LabelDesigner/components/Drag.vue) 中硬编码了 `padding: 0 10px 0 0`（右侧强制留白 10px）。
-  2. 表格设计组件 [TableUi.vue](file:///Users/dylan/CodeHub/HanTian/label-designer-v3/src/components/LabelDesigner/elements/TableUi.vue) 底部带有 `<div class="table-wrap__place" style="height:30px">` 伪占位块，导致设计器中表格高被压缩了 30px，而预览中表格高度展开为完整的 100%。
-- **解法**：
-  - 将 [Drag.vue](file:///Users/dylan/CodeHub/HanTian/label-designer-v3/src/components/LabelDesigner/components/Drag.vue) 的 `padding` 设为 `0`。
-  - 彻底删除 `table-wrap__place` 占位块，将 `TableUi.vue` 与 `PreviewTable.vue` 统一设置为 `height: 100%`。
-  - **效果**：编辑画布与预览打印实现 **100% 像素级对齐**。
+- [ ] QZ Tray 已安装；静默打印证书见 `public/certs/`（证书与私钥勿提交 Git）
+- [ ] 译维 A42 默认底纸 = 标签物理尺寸（如 80×60），边距 0
+- [ ] 浓度 / 速度按陷阱 4 调节；换纸后缝隙学习
+- [ ] `qz.configs` 无 `orientation`
+- [ ] 位图 `html2canvas` `scale: 3`
+- [ ] HTML 模式确认 `pageWidth` / `pageHeight` 为 mm 且能覆盖画布
+- [ ] 设备 `qr_code` 为真实可访问 URL（扫码测连通，勿用假域名）
 
 ---
 
-## 四、 部署与生产环境 CheckList
+## 五、相关代码与文档
 
-上线部署前，请对照以下检查清单核对：
-
-- [x] **QZ Tray 客户端证书**：生产环境配置合法的数字签名证书（防止弹出浏览器授权弹窗）。
-- [x] **Windows 驱动首选项**：默认底纸设为 `80mm × 60mm`，边距设为 `0`。
-- [x] **硬件加热设置**：打印黑度设为 `12~14`，速度降至 `2.0~3.0 in/s`。
-- [x] **QZ Config 参数**：确认 `qz.configs.create` 中已移除 `orientation` 配置。
-- [x] **采样倍率**：确认 `html2canvas` 的 `scale` 为 `3`。
-- [x] **CSS 分页**：确认单页 HTML 中使用了 `page-break-after: avoid !important`。
+| 路径 | 说明 |
+| :--- | :--- |
+| `src/utils/printService.js` | 渲染、PRINT_CSS、browser / qz-html / qz-image |
+| `src/utils/qzClient.js` | QZ 连接与证书钩子 |
+| `src/views/DevicePrintPage.vue` | 设备列表与打印方式切换 |
+| `docs/05_template-variables-and-device-print.md` | `${变量}` 与设备数据注入 |
+| `public/certs/README.md` | 静默打印证书（本地放置，已 gitignore） |
 
 ---
 
-## 五、 结论
+## 六、结论
 
-通过本文提供的 Vue 3 + QZ Tray + 译维 A42 适配方案，我们在不依赖特定硬件指令集（如 TSPL/CPCL）的前提下，利用 Windows 标准打印驱动与高密度位图渲染技术，实现了 Web 端高精度、无缝隙、无跳页的热敏标签打印。该方案不仅提升了前端模板设计的灵活性与可视化程度，更为工业级 Web 标签打印提供了标准化的参考依据。
+在不绑定 TSPL / CPCL 的前提下，用 Windows 驱动 + QZ Tray 即可完成 Web 标签打印。位图模式对齐最稳；HTML 模式注意抓取视口单位与纸张配置。表格单边描边、字重雅黑 700、画布 / 预览同一套度量，是避免「线粗不一 / 字糊 / 二维码错位」的关键约定。
