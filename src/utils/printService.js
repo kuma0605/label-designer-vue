@@ -190,14 +190,15 @@ export async function renderLabelsToPages(jobs, options = {}) {
 export const CSS_PX_PER_MM = 96 / 25.4;
 
 /**
- * 为单页构造符合物理 mm 规格且具备 @page 锁尺度的完整 HTML 文档
- * 使用 CSS calc(${widthMm}mm / ${page.width}px) 消除 203DPI/300DPI 打印机与 96DPI 视口的 DPI 偏差
+ * QZ HTML：按画布设计像素出文档（不做 mm/transform 缩放）。
+ * QZ 用 pageWidth/pageHeight 抓取完整画布，再 scaleContent 缩到物理标签尺寸。
+ * 若把 body 锁成 mm（≈96DPI），视口只有设计宽度的 ~3/4，就会裁切。
  * @param {{ html: string, width: number, height: number }} page
  * @returns {string}
  */
 export function buildPageHtml(page) {
-  const widthMm = page.width / PX_PER_MM;
-  const heightMm = page.height / PX_PER_MM;
+  const w = page.width;
+  const h = page.height;
 
   return `<!DOCTYPE html>
 <html>
@@ -205,38 +206,24 @@ export function buildPageHtml(page) {
   <meta charset="utf-8" />
   <title>标签打印</title>
   <style>
-    @page {
-      size: ${widthMm}mm ${heightMm}mm;
-      margin: 0;
-    }
     * { box-sizing: border-box; }
     html, body {
       margin: 0;
       padding: 0;
-      width: ${widthMm}mm;
-      height: ${heightMm}mm;
+      width: ${w}px;
+      height: ${h}px;
       overflow: hidden;
       background: #ffffff;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
-    .print-label-page {
-      width: ${widthMm}mm;
-      height: ${heightMm}mm;
+    .print-label-page,
+    .print-label-inner {
+      width: ${w}px;
+      height: ${h}px;
       position: relative;
       overflow: hidden;
       background: #ffffff;
-      page-break-after: avoid !important;
-      break-after: avoid !important;
-    }
-    .print-label-inner {
-      width: ${page.width}px;
-      height: ${page.height}px;
-      transform: scale(calc(${widthMm}mm / ${page.width}px));
-      transform-origin: 0 0;
-      position: absolute;
-      top: 0;
-      left: 0;
     }
     ${PRINT_CSS}
   </style>
@@ -420,6 +407,9 @@ async function qzHtmlPrint(pages, options = {}) {
     const widthMm = page.width / PX_PER_MM;
     const heightMm = page.height / PX_PER_MM;
     const htmlDoc = buildPageHtml(page);
+    // pageWidth/Height = 网页抓取视口（英寸，96px/in），必须盖住设计像素，否则只打出左上角
+    const captureWidthIn = page.width / 96;
+    const captureHeightIn = page.height / 96;
 
     const config = qz.configs.create(printerName, {
       units: 'mm',
@@ -437,7 +427,11 @@ async function qzHtmlPrint(pages, options = {}) {
         type: 'pixel',
         format: 'html',
         flavor: 'plain',
-        data: htmlDoc
+        data: htmlDoc,
+        options: {
+          pageWidth: captureWidthIn,
+          pageHeight: captureHeightIn
+        }
       }
     ];
 
