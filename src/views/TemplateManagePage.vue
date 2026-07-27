@@ -6,6 +6,7 @@ import {
   loadTemplatesFromStorage,
   saveTemplatesToStorage,
   setDefaultTemplate,
+  restoreTemplateFromSeed,
   createId
 } from '@/utils/templateStore.js';
 
@@ -113,6 +114,26 @@ const handleDelete = (id, e) => {
   });
 };
 
+const handleRestoreSeed = (id, e) => {
+  e.stopPropagation();
+  const confirm = DialogPlugin.confirm({
+    header: '恢复默认内容',
+    body: '将用内置种子模板覆盖当前内容（可保留名称）。若画布被误清空，可用此恢复。',
+    theme: 'warning',
+    onConfirm: () => {
+      const list = restoreTemplateFromSeed(id);
+      if (!list) {
+        MessagePlugin.warning('没有可恢复的种子模板（仅系统默认模板支持）');
+        confirm.destroy();
+        return;
+      }
+      templatesList.value = list;
+      MessagePlugin.success('已恢复默认模板内容');
+      confirm.destroy();
+    }
+  });
+};
+
 const handleSave = (savedTpl) => {
   const targetIndex = templatesList.value.findIndex(item => item.id === activeTemplate.value.id);
   const finalTpl = {
@@ -203,6 +224,7 @@ onMounted(() => {
             <div class="mini-label-box" :style="getMiniLabelStyle(item.width, item.height)">
               <span class="preview-text">尺寸: {{ item.width / 5 }} x {{ item.height / 5 }} mm</span>
               <span class="preview-count">包含物料: {{ item.data?.length || 0 }} 个</span>
+              <span v-if="!(item.data?.length)" class="preview-empty">画布为空，可点「恢复默认」</span>
             </div>
           </div>
           <div class="card-info">
@@ -216,6 +238,10 @@ onMounted(() => {
               >
                 <template #icon><t-icon name="check-circle" /></template>
                 设为默认
+              </t-button>
+              <t-button variant="text" theme="warning" @click.stop="handleRestoreSeed(item.id, $event)">
+                <template #icon><t-icon name="refresh" /></template>
+                恢复默认
               </t-button>
               <t-button variant="text" theme="default" @click.stop="handleCopyJson(item, $event)">
                 <template #icon><t-icon name="file-copy" /></template>
@@ -350,6 +376,10 @@ onMounted(() => {
             color: #999;
             padding: 2px 6px;
             border-radius: 10px;
+          }
+          .preview-empty {
+            font-size: 10px;
+            color: #e37318;
           }
         }
       }

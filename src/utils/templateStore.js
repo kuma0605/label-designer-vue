@@ -154,6 +154,36 @@ export function saveTemplatesToStorage(list) {
 }
 
 /**
+ * 用种子 JSON 覆盖指定模板（用于误清空/空 data 恢复）
+ * @param {string} templateId
+ * @returns {object[]|null} 更新后的列表；未找到种子时返回 null
+ */
+export function restoreTemplateFromSeed(templateId) {
+  const defaults = getDefaultTemplates();
+  const seed =
+    defaults.find((t) => t.id === templateId) ||
+    (SEED_TEMPLATE_IDS.has(templateId) ? defaults[0] : null);
+  if (!seed) return null;
+
+  const list = loadTemplatesFromStorage({ persistSeed: false });
+  const index = list.findIndex((t) => t.id === templateId);
+  const restored = {
+    ...structuredClone(seed),
+    id: templateId,
+    seedVersion: SEED_VERSION
+  };
+  if (index > -1) {
+    // 保留用户改过的名称
+    restored.name = list[index].name || restored.name;
+    list[index] = restored;
+  } else {
+    list.unshift(restored);
+  }
+  saveTemplatesToStorage(list);
+  return list;
+}
+
+/**
  * 将指定 ID 的模板设为系统首选默认模板（置顶）
  */
 export function setDefaultTemplate(templateId) {

@@ -43,6 +43,8 @@ const emit = defineEmits(['update:modelValue', 'save', 'print']);
 
 // 防止 modelValue ↔ storeList 双向 watch 互相震荡的标志位
 const _isSyncingFromParent = ref(false);
+/** 卸载时 clearStoreList 会触发 storeList watch，绝不能把 data:[] 写回父级模板 */
+const _isUnmounting = ref(false);
 const printing = ref(false);
 
 let syncUnlockTimer = null;
@@ -63,11 +65,12 @@ const lockSyncFromParent = () => {
 watch(
   () => props.modelValue,
   (newVal) => {
-    if (!newVal) return;
+    if (!newVal || _isUnmounting.value) return;
+    const incoming = Array.isArray(newVal.data) ? newVal.data : [];
     // 仅当外部数据与内部 store 不一致时才重新加载，避免内部更新回写时再触发
-    if (newVal.data && JSON.stringify(newVal.data) !== JSON.stringify(state.storeList)) {
+    if (JSON.stringify(incoming) !== JSON.stringify(state.storeList)) {
       lockSyncFromParent();
-      actions.updateStoreList(newVal.data);
+      actions.updateStoreList(incoming);
       if (newVal.width && newVal.height) {
         actions.setPageSize(newVal.width, newVal.height);
       }
@@ -83,7 +86,8 @@ watch(
 watch(
   () => [state.storeList, state.page],
   () => {
-    if (_isSyncingFromParent.value) return;
+    if (_isSyncingFromParent.value || _isUnmounting.value) return;
+    if (!props.modelValue) return;
     emit('update:modelValue', {
       id: props.modelValue?.id,
       name: props.modelValue?.name || '标签模板',
@@ -160,6 +164,11 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  _isUnmounting.value = true;
+  if (syncUnlockTimer) {
+    clearTimeout(syncUnlockTimer);
+    syncUnlockTimer = null;
+  }
   actions.clearStoreList();
   off(document, 'click', handleCancelCurrent);
 });
