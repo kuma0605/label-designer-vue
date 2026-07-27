@@ -407,9 +407,11 @@ async function qzHtmlPrint(pages, options = {}) {
     const widthMm = page.width / PX_PER_MM;
     const heightMm = page.height / PX_PER_MM;
     const htmlDoc = buildPageHtml(page);
-    // pageWidth/Height = 网页抓取视口（英寸，96px/in），必须盖住设计像素，否则只打出左上角
-    const captureWidthIn = page.width / 96;
-    const captureHeightIn = page.height / 96;
+    // pageWidth/Height 与 config.units 一致（mm）：
+    // 按 96DPI 网页度量覆盖完整设计像素，再由 scaleContent 缩到物理标签。
+    // 若误传「英寸数值」而 units=mm，视口会变成几毫米，表现为 HTML 模式不出纸。
+    const captureWidthMm = page.width / CSS_PX_PER_MM;
+    const captureHeightMm = page.height / CSS_PX_PER_MM;
 
     const config = qz.configs.create(printerName, {
       units: 'mm',
@@ -429,8 +431,8 @@ async function qzHtmlPrint(pages, options = {}) {
         flavor: 'plain',
         data: htmlDoc,
         options: {
-          pageWidth: captureWidthIn,
-          pageHeight: captureHeightIn
+          pageWidth: captureWidthMm,
+          pageHeight: captureHeightMm
         }
       }
     ];
