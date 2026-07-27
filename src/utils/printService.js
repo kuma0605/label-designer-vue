@@ -45,8 +45,20 @@ const PRINT_CSS = `
   }
   .template-wrap { position: relative; overflow: hidden; background: #fff; color: #000000; }
   .component { position: absolute; box-sizing: border-box; color: #000000; }
-  /* 位图/共用：不要 SimHei + text-stroke，热敏上中文容易糊成一团 */
   .detail { color: #000000 !important; font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif; }
+  /*
+   * 位图 / HTML 共用加粗：雅黑 + 700。
+   * 不用 text-stroke / SimHei 优先，避免热敏中文糊成一团。
+   */
+  .detail[style*="font-weight: bold"],
+  .detail[style*="font-weight:bold"],
+  .detail[style*="font-weight: 700"],
+  .detail[style*="font-weight:700"],
+  .table-wrap.is-bold th p,
+  .table-wrap.is-bold td span {
+    font-family: "Microsoft YaHei", "Microsoft YaHei UI", Arial, sans-serif !important;
+    font-weight: 700 !important;
+  }
   .barcode-wrap {
     display: flex;
     align-items: center;
@@ -129,21 +141,6 @@ const PRINT_CSS = `
   @media print {
     @page { margin: 0; }
     body { margin: 0; }
-  }
-`;
-
-/** 仅 QZ HTML：补加粗（位图截图不要用，否则热敏中文易糊） */
-const QZ_HTML_BOLD_CSS = `
-  .detail[style*="font-weight: bold"],
-  .detail[style*="font-weight:bold"],
-  .detail[style*="font-weight: 700"],
-  .detail[style*="font-weight:700"],
-  .table-wrap.is-bold th p,
-  .table-wrap.is-bold td span {
-    font-family: "Microsoft YaHei", "SimHei", Arial, sans-serif !important;
-    font-weight: 700 !important;
-    -webkit-text-stroke: 0.35px #000;
-    paint-order: stroke fill;
   }
 `;
 
@@ -246,7 +243,6 @@ export function buildPageHtml(page) {
       background: #ffffff;
     }
     ${PRINT_CSS}
-    ${QZ_HTML_BOLD_CSS}
   </style>
 </head>
 <body><div class="print-label-page"><div class="print-label-inner">${page.html}</div></div></body>

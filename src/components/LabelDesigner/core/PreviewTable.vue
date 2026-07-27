@@ -23,11 +23,13 @@ const formattedFontSize = computed(() => {
 
 const cellTextStyle = computed(() => ({
   textAlign: align.value || 'left',
-  fontWeight: isBold.value ? 'bold' : 'normal',
+  fontWeight: isBold.value ? 700 : 400,
   fontSize: formattedFontSize.value,
-  // 固定行高倍数，降低引擎间度量差；字体保持偏细栈，避免位图热敏糊字
   lineHeight: '1.25',
-  fontFamily: 'Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif'
+  // 加粗时雅黑优先，与打印 PRINT_CSS 一致（位图 / HTML 同粗细）
+  fontFamily: isBold.value
+    ? '"Microsoft YaHei", "Microsoft YaHei UI", Arial, sans-serif'
+    : 'Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif'
 }));
 
 /** 原始列 key（可能含 ${var}），用于取数；展示用 label（已替换） */

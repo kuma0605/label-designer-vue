@@ -77,10 +77,12 @@ const getItemStyle = computed(() => {
 
 const cellTextStyle = computed(() => ({
   textAlign: props.align || 'left',
-  fontWeight: props.isBold ? 'bold' : 'normal',
+  fontWeight: props.isBold ? 700 : 400,
   fontSize: formattedFontSize.value,
   lineHeight: '1.25',
-  fontFamily: 'Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif'
+  fontFamily: props.isBold
+    ? '"Microsoft YaHei", "Microsoft YaHei UI", Arial, sans-serif'
+    : 'Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif'
 }));
 
 const columns = computed(() => {
