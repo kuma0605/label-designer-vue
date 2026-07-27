@@ -91,7 +91,8 @@ const PRINT_CSS = `
     border-left: var(--table-border-width, 2px) var(--table-border-style, solid) #000;
   }
   .table-wrap__tr {
-    height: calc(100% / var(--table-row-count, 6));
+    /* 优先用预览写入的整数行高，避免亚像素横线在 html2canvas 里发粗 */
+    height: var(--table-row-height, calc(100% / var(--table-row-count, 6)));
   }
   .table-wrap th, .table-wrap td {
     position: relative;

@@ -377,7 +377,7 @@ const onColHandleClick = (e) => {
 
   &__tr {
     position: relative;
-    height: calc(100% / var(--table-row-count, 6));
+    height: var(--table-row-height, calc(100% / var(--table-row-count, 6)));
   }
 
   /* 边框画在 th/td 上，左右列必然同高；内层只负责内容与手柄 */

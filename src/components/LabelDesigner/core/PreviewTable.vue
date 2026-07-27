@@ -56,10 +56,27 @@ const tableData = computed(() => {
 
 const tableRowCount = computed(() => tableData.value.length + 1); // + header
 
+/** 整数行高，避免 calc(100%/n) 亚像素导致位图横线忽粗忽细 */
+const rowHeightPx = computed(() => {
+  const n = Math.max(tableRowCount.value, 1);
+  const h = Number(
+    props.component?.default?.height ?? props.component?.rect?.height ?? 0
+  );
+  if (!Number.isFinite(h) || h <= 0) return 0;
+  return Math.round(h / n);
+});
+
+const rowHeightStyle = computed(() =>
+  rowHeightPx.value > 0 ? { height: `${rowHeightPx.value}px` } : undefined
+);
+
 const tableWrapStyle = computed(() => ({
   '--table-border-style': borderStyle.value,
   '--table-border-width': `${borderWidth.value}px`,
-  '--table-row-count': String(Math.max(tableRowCount.value, 1))
+  '--table-row-count': String(Math.max(tableRowCount.value, 1)),
+  ...(rowHeightPx.value > 0
+    ? { '--table-row-height': `${rowHeightPx.value}px` }
+    : {})
 }));
 
 const columnWidths = computed(() => {
@@ -97,7 +114,7 @@ const columnWidths = computed(() => {
         />
       </colgroup>
       <thead>
-        <tr class="table-wrap__tr">
+        <tr class="table-wrap__tr" :style="rowHeightStyle">
           <th v-for="col in columns" :key="col.key">
             <div class="table-wrap__th">
               <p :style="cellTextStyle">{{ col.label }}</p>
@@ -110,6 +127,7 @@ const columnWidths = computed(() => {
           v-for="(row, rowIndex) in tableData"
           :key="rowIndex"
           class="table-wrap__tr"
+          :style="rowHeightStyle"
         >
           <td v-for="col in columns" :key="col.key">
             <div class="table-wrap__td">
@@ -145,7 +163,7 @@ const columnWidths = computed(() => {
 }
 
 .preview-table-wrap :deep(.table-wrap__tr) {
-  height: calc(100% / var(--table-row-count, 6));
+  height: var(--table-row-height, calc(100% / var(--table-row-count, 6)));
 }
 
 .preview-table-wrap :deep(th),
