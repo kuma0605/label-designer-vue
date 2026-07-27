@@ -126,8 +126,12 @@ const columnWidths = computed(() => {
 .preview-table-wrap :deep(.table-wrap__table) {
   width: 100%;
   height: auto;
-  border-collapse: collapse;
+  /* 与 TableUi / 位图打印一致：单边描边，避免相邻线叠粗 */
+  border-collapse: separate;
+  border-spacing: 0;
   table-layout: fixed;
+  border-top: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
+  border-left: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
 }
 
 .preview-table-wrap :deep(th),
@@ -136,7 +140,9 @@ const columnWidths = computed(() => {
   box-sizing: border-box;
   padding: 6px 10px;
   vertical-align: middle;
-  border: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
+  border: 0;
+  border-right: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
+  border-bottom: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
   line-height: normal;
 }
 

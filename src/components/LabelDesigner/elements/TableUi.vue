@@ -331,8 +331,16 @@ const onColHandleClick = (e) => {
     width: 100%;
     /* 不要 height:100%：表格模型会把剩余高度堆到某一行 */
     height: auto;
-    border-collapse: collapse;
+    /*
+     * separate + 单边描边：html2canvas 不会合并 collapse 边框，
+     * 若 th/td 四边都画，位图里相邻线会叠成约 2 倍粗。
+     * 上/左画在 table，右/下画在单元格 → 内外线宽一致。
+     */
+    border-collapse: separate;
+    border-spacing: 0;
     table-layout: fixed;
+    border-top: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
+    border-left: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
   }
 
   &__tr {
@@ -346,7 +354,9 @@ const onColHandleClick = (e) => {
     box-sizing: border-box;
     padding: 6px 10px;
     vertical-align: middle;
-    border: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
+    border: 0;
+    border-right: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
+    border-bottom: var(--table-border-width, 2px) var(--table-border-style) var(--table-border-color);
     line-height: normal;
   }
 

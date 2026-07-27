@@ -82,8 +82,12 @@ const PRINT_CSS = `
   .table-wrap__table {
     width: 100%;
     height: auto;
-    border-collapse: collapse;
+    /* html2canvas 不合并 collapse 边框；单边描边保证内外线宽一致 */
+    border-collapse: separate;
+    border-spacing: 0;
     table-layout: fixed;
+    border-top: var(--table-border-width, 2px) var(--table-border-style, solid) #000;
+    border-left: var(--table-border-width, 2px) var(--table-border-style, solid) #000;
   }
   .table-wrap th, .table-wrap td {
     position: relative;
@@ -91,7 +95,9 @@ const PRINT_CSS = `
     padding: 6px 10px;
     color: #000000;
     vertical-align: middle;
-    border: var(--table-border-width, 2px) var(--table-border-style, solid) #000;
+    border: 0;
+    border-right: var(--table-border-width, 2px) var(--table-border-style, solid) #000;
+    border-bottom: var(--table-border-width, 2px) var(--table-border-style, solid) #000;
     line-height: normal;
     font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
   }
