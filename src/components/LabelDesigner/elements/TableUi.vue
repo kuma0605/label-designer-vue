@@ -361,8 +361,8 @@ const onColHandleClick = (e) => {
 
   &__table {
     width: 100%;
-    /* 均分行高：与预览/QZ HTML 一致，避免绝对定位二维码相对行线漂移 */
     height: 100%;
+    box-sizing: border-box;
     /*
      * separate + 单边描边：html2canvas 不会合并 collapse 边框，
      * 若 th/td 四边都画，位图里相邻线会叠成约 2 倍粗。
@@ -377,7 +377,7 @@ const onColHandleClick = (e) => {
 
   &__tr {
     position: relative;
-    height: var(--table-row-height, calc(100% / var(--table-row-count, 6)));
+    height: calc(100% / var(--table-row-count, 6));
   }
 
   /* 边框画在 th/td 上，左右列必然同高；内层只负责内容与手柄 */

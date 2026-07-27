@@ -82,8 +82,8 @@ const PRINT_CSS = `
   }
   .table-wrap__table {
     width: 100%;
-    /* 均分行高，锁定与画布一致，避免 QZ 行高变矮导致二维码相对下移/超出 3 行 */
     height: 100%;
+    box-sizing: border-box;
     border-collapse: separate;
     border-spacing: 0;
     table-layout: fixed;
@@ -91,8 +91,7 @@ const PRINT_CSS = `
     border-left: var(--table-border-width, 2px) var(--table-border-style, solid) #000;
   }
   .table-wrap__tr {
-    /* 优先用预览写入的整数行高，避免亚像素横线在 html2canvas 里发粗 */
-    height: var(--table-row-height, calc(100% / var(--table-row-count, 6)));
+    height: calc(100% / var(--table-row-count, 6));
   }
   .table-wrap th, .table-wrap td {
     position: relative;

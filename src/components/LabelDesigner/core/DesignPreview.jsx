@@ -150,11 +150,8 @@ export default defineComponent({
             </div>
           );
         case name === 'qrCode' || type === 'QrCodeUi':
-          return (
-            <div class="qr-code-wrap" style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              <PreviewQrcode {...sharedProps} />
-            </div>
-          );
+          // 与画布一致：只保留 PreviewQrcode 内一层 flex，避免双层包裹导致视觉上移
+          return <PreviewQrcode {...sharedProps} />;
         case name === 'xLine' || type === 'XLineUi':
           return <div class="x-line-wrap" style={selfStyle} />;
         case name === 'yLine' || type === 'YLineUi':
@@ -162,11 +159,7 @@ export default defineComponent({
         case name === 'rectangle' || type === 'RectangleUi':
           return <div class="rectangle-wrap" style={{ ...selfStyle, width: '100%', height: '100%' }} />;
         case isTable:
-          return (
-            <div class="table-wrap" style={{ width: '100%', height: '100%' }}>
-              <PreviewTable component={component} variables={props.variables} />
-            </div>
-          );
+          return <PreviewTable component={component} variables={props.variables} />;
         default:
           // Custom Text
           return (

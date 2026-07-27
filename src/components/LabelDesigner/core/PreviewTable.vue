@@ -56,27 +56,11 @@ const tableData = computed(() => {
 
 const tableRowCount = computed(() => tableData.value.length + 1); // + header
 
-/** 整数行高，避免 calc(100%/n) 亚像素导致位图横线忽粗忽细 */
-const rowHeightPx = computed(() => {
-  const n = Math.max(tableRowCount.value, 1);
-  const h = Number(
-    props.component?.default?.height ?? props.component?.rect?.height ?? 0
-  );
-  if (!Number.isFinite(h) || h <= 0) return 0;
-  return Math.round(h / n);
-});
-
-const rowHeightStyle = computed(() =>
-  rowHeightPx.value > 0 ? { height: `${rowHeightPx.value}px` } : undefined
-);
-
 const tableWrapStyle = computed(() => ({
   '--table-border-style': borderStyle.value,
   '--table-border-width': `${borderWidth.value}px`,
-  '--table-row-count': String(Math.max(tableRowCount.value, 1)),
-  ...(rowHeightPx.value > 0
-    ? { '--table-row-height': `${rowHeightPx.value}px` }
-    : {})
+  // 与画布一致：按容器实际高度均分，勿用 default.height 写死 px（未扣 1px 边框会把行撑高，二维码相对上移）
+  '--table-row-count': String(Math.max(tableRowCount.value, 1))
 }));
 
 const columnWidths = computed(() => {
@@ -114,7 +98,7 @@ const columnWidths = computed(() => {
         />
       </colgroup>
       <thead>
-        <tr class="table-wrap__tr" :style="rowHeightStyle">
+        <tr class="table-wrap__tr">
           <th v-for="col in columns" :key="col.key">
             <div class="table-wrap__th">
               <p :style="cellTextStyle">{{ col.label }}</p>
@@ -127,7 +111,6 @@ const columnWidths = computed(() => {
           v-for="(row, rowIndex) in tableData"
           :key="rowIndex"
           class="table-wrap__tr"
-          :style="rowHeightStyle"
         >
           <td v-for="col in columns" :key="col.key">
             <div class="table-wrap__td">
@@ -153,8 +136,8 @@ const columnWidths = computed(() => {
 
 .preview-table-wrap :deep(.table-wrap__table) {
   width: 100%;
-  /* 锁死行高：均分行高，避免 QZ WebKit 与 Chrome 内容撑高不一致导致二维码错位 */
   height: 100%;
+  box-sizing: border-box;
   border-collapse: separate;
   border-spacing: 0;
   table-layout: fixed;
@@ -163,7 +146,7 @@ const columnWidths = computed(() => {
 }
 
 .preview-table-wrap :deep(.table-wrap__tr) {
-  height: var(--table-row-height, calc(100% / var(--table-row-count, 6)));
+  height: calc(100% / var(--table-row-count, 6));
 }
 
 .preview-table-wrap :deep(th),
