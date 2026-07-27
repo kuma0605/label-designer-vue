@@ -27,14 +27,14 @@
 
 ```mermaid
 flowchart TD
-  A["模板 JSON + 设备 variables"] --> B["DesignPreview 离屏渲染"]
+  A[TemplateJSON] --> B[DesignPreview]
   B --> C{adapter}
-  C -->|qz-image| D["html2canvas x3 to PNG base64"]
-  C -->|qz-html| E["buildPageHtml + pageWidth/Height"]
-  C -->|browser| F["window.print"]
-  D --> G["QZ Tray"]
+  C -->|image| D[html2canvas PNG]
+  C -->|html| E[buildPageHtml]
+  C -->|browser| F[window_print]
+  D --> G[QZ_Tray]
   E --> G
-  G --> H["Windows Spooler / Yiwei A42"]
+  G --> H[Spooler_A42]
 ```
 
 实现入口：`src/utils/printService.js`（`printLabelJobs` / `qzHtmlPrint` / `qzImagePrint`）。

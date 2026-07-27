@@ -31,14 +31,14 @@
 
 ```mermaid
 flowchart TD
-  A["Template JSON + device data"] --> B["Offscreen label preview"]
-  B --> C{print adapter}
-  C -->|bitmap| D["html2canvas x3 PNG"]
-  C -->|html| E["HTML doc + page size mm"]
-  C -->|browser| F["window.print"]
-  D --> G["QZ Tray"]
+  A[TemplateJSON] --> B[OffscreenPreview]
+  B --> C{adapter}
+  C -->|bitmap| D[html2canvas_PNG]
+  C -->|html| E[HTML_page_mm]
+  C -->|browser| F[window_print]
+  D --> G[QZ_Tray]
   E --> G
-  G --> H["Windows spooler / thermal printer"]
+  G --> H[Windows_Spooler]
 ```
 
 数据流可以记成一句话：**模板 + 设备字段 → 替换变量 → 离屏渲染 → 选通道出纸**。
