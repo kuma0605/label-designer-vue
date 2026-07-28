@@ -1,6 +1,6 @@
 # 矢量商品标签设计器组件 (Vue 3 + TDesign + JSX)
 
-基于 Vue 3 + Vite + TDesign Vue Next + JSX 重构的商品标签设计器。从 Vue 2 + Element UI 旧系统（[manifest-design](https://github.com/SXX19950910/manifest-design)）重写而来，做成**可复用、自闭环**组件，便于整体复制到资产管理系统等宿主项目。
+基于 Vue 3 + Vite + TDesign Vue Next + JSX 的商品标签设计器，做成**可复用、自闭环**组件，便于整体复制到资产管理系统等宿主项目。早期排版思路参考过 [manifest-design](https://github.com/SXX19950910/manifest-design)，当前实现与功能已大幅演进。
 
 Demo 含两页：**模板管理**（设计/保存）与 **设备打印**（选设备 → 预览填数 → 浏览器或 QZ Tray 打印）。
 
