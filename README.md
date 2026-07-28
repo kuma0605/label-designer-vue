@@ -28,7 +28,8 @@ Demo 含两页：**模板管理**（设计/保存）与 **设备打印**（选�
 - TDesign Vue Next
 - Vite + Sass
 - `jsbarcode` / `qrcode` / `html2canvas` / `lodash` / `throttle-debounce`
-- `qz-tray`（连接本机 [QZ Tray](https://qz.io/)）
+- `qz-tray`（连接本机 [QZ Tray](https://qz.io/)）；静默签名用 `jsrsasign`
+- UI：`tdesign-vue-next` / `tdesign-icons-vue-next`
 
 ---
 
@@ -86,15 +87,50 @@ src/
 
 ## 移植到宿主项目
 
+设计器面板依赖 **TDesign**，预览树是 **JSX**（`DesignPreview.jsx`），宿主需已用 Vue 3，并具备 `@` → `src` 别名。顶栏「打印预览」会调用 `printService`，因此打印相关 utils **不是可选附件**。
+
 ### 1. 复制代码
 
-- `src/components/LabelDesigner/` → 宿主 `src/components/`
-- `src/utils/` 中与打印/预览相关的文件按需合并：`dom.js`、`index.js`、`update.js`、`preview.js`；若宿主也要打标签，一并带上 `printService.js`、`qzClient.js`
+保留目录名，复制到宿主对应路径：
+
+| 来源 | 说明 |
+| :--- | :--- |
+| `src/components/LabelDesigner/` | 设计器整包（勿拆散） |
+| `src/utils/dom.js` | DOM 事件 |
+| `src/utils/index.js` | 辅助线等 |
+| `src/utils/update.js` | 元素更新 |
+| `src/utils/preview.js` | 条码 / 二维码 DataURL |
+| `src/utils/templateStore.js` | `normalizeElement`、示例打印变量等（设计器必用） |
+| `src/utils/printService.js` | 渲染 + browser / qz-html / qz-image |
+| `src/utils/qzClient.js` | QZ 连接与证书钩子 |
+| `src/mock/defaultTemplates.json` | `templateStore` 的种子 import；宿主若改用纯 API，需改掉该 import 或保留占位 JSON |
+
+静默打印时再按 [`public/certs/README.md`](public/certs/README.md) 配置证书（勿把私钥提交仓库）。
 
 ### 2. 安装依赖
 
+运行时：
+
 ```bash
-npm install jsbarcode qrcode html2canvas throttle-debounce lodash qz-tray
+npm install tdesign-vue-next tdesign-icons-vue-next \
+  jsbarcode qrcode html2canvas throttle-debounce lodash \
+  qz-tray jsrsasign
+```
+
+构建侧（若宿主尚未具备）：
+
+- Vite：`@vitejs/plugin-vue` + `@vitejs/plugin-vue-jsx`（必须能编译 `.jsx`）
+- `sass`（组件内 `lang="scss"`）
+
+入口注册 TDesign（与本仓库 `main.js` 类似）：
+
+```js
+import { createApp } from 'vue'
+import TDesign from 'tdesign-vue-next'
+import 'tdesign-vue-next/es/style/index.css'
+import App from './App.vue'
+
+createApp(App).use(TDesign).mount('#app')
 ```
 
 ### 3. 挂载设计器
@@ -109,6 +145,8 @@ const variables = ref([
   { key: 'asset_name', label: '资产名称' },
   { key: 'barcode_code', label: '条形码编码' },
   { key: 'qr_code', label: '二维码数据/链接' },
+  { key: 'serial_no', label: '序列号 SN' },
+  { key: 'specification', label: '规格型号' },
   { key: 'use_dept', label: '使用部门' },
   { key: 'storage_place', label: '存放地点' }
 ]);
@@ -120,6 +158,7 @@ const templateData = ref({
   width: 250,
   height: 175,
   data: []
+  // 若沿用本仓库种子升级逻辑，持久化时请保留 seedVersion
 });
 
 const onSaveTemplate = (tpl) => {
@@ -139,7 +178,7 @@ const onSaveTemplate = (tpl) => {
 </template>
 ```
 
-### 4. 宿主侧打印（可选）
+### 4. 宿主侧打印
 
 ```js
 import { printLabelJobs } from '@/utils/printService.js';
@@ -154,6 +193,6 @@ await printLabelJobs([{ template, variables: device }], {
 });
 ```
 
-正式环境模板/设备数据应由后台 API 提供；本仓库 demo 用 `localStorage` + `src/mock/defaultTemplates.json` 模拟。
+正式环境模板 / 设备数据应由后台 API 提供；本仓库 demo 用 `localStorage` + `src/mock/defaultTemplates.json` 模拟。
 
-设备列表如何把动态数据填进模板：见 [`docs/05_template-variables-and-device-print.md`](docs/05_template-variables-and-device-print.md)。
+变量注入与设备页流程见 [`docs/05_template-variables-and-device-print.md`](docs/05_template-variables-and-device-print.md)；热敏机纸张与 QZ 踩坑见 [`docs/04_yiwei-a42-qz-tray-bitmap-print-guide.md`](docs/04_yiwei-a42-qz-tray-bitmap-print-guide.md)。
