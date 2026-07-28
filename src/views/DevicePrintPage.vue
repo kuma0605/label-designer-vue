@@ -1,32 +1,12 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
-import DesignPreview from '../components/LabelDesigner/core/DesignPreview.jsx';
+import { ref, computed, onMounted } from 'vue';
+import LabelPrintDialog from '@/components/LabelPrintDialog.vue';
 import { MessagePlugin } from 'tdesign-vue-next';
-import { printLabelJobs } from '@/utils/printService.js';
 import { loadTemplatesFromStorage } from '@/utils/templateStore.js';
-import {
-  connectQz,
-  listPrinters,
-  isQzConnected
-} from '@/utils/qzClient.js';
 
 // 模板列表（demo：localStorage；种子数据来自 mock JSON）
 const templatesList = ref([]);
 const selectedTemplateId = ref('');
-const printing = ref(false);
-
-/** @type {import('vue').Ref<'browser' | 'qz-html' | 'qz-image'>} */
-const printAdapter = ref('qz-html');
-const printerList = ref([]);
-const selectedPrinter = ref('');
-const qzConnecting = ref(false);
-const qzConnected = ref(false);
-const qzStatusText = computed(() => {
-  if (!printAdapter.value.startsWith('qz')) return '';
-  if (qzConnecting.value) return '正在连接 QZ Tray…';
-  if (qzConnected.value) return 'QZ Tray 已连接';
-  return 'QZ Tray 未连接';
-});
 
 // 设备 demo 数据
 const deviceList = ref([
@@ -70,10 +50,14 @@ const selectedDevices = computed(() => {
   return deviceList.value.filter(d => selectedDeviceIds.value.includes(d.asset_num));
 });
 
-// 当前选中的模板
-const selectedTemplate = computed(() => {
-  return templatesList.value.find(t => t.id === selectedTemplateId.value) || templatesList.value[0] || null;
-});
+const printDialogItems = computed(() =>
+  selectedDevices.value.map((device) => ({
+    id: device.asset_num,
+    variables: device,
+    title: device.asset_num,
+    subtitle: device.asset_name
+  }))
+);
 
 // 全选 / 取消全选
 const handleSelectAll = (checked) => {
@@ -98,44 +82,13 @@ const loadTemplates = () => {
   templatesList.value = loadTemplatesFromStorage();
 };
 
-const refreshQzPrinters = async ({ silent = false } = {}) => {
-  qzConnecting.value = true;
-  try {
-    await connectQz();
-    qzConnected.value = isQzConnected();
-    const printers = await listPrinters();
-    printerList.value = printers;
-    if (!selectedPrinter.value || !printers.includes(selectedPrinter.value)) {
-      selectedPrinter.value = printers[0] || '';
+const ensureTemplateSelected = () => {
+  if (templatesList.value.length > 0) {
+    if (!selectedTemplateId.value || !templatesList.value.some(t => t.id === selectedTemplateId.value)) {
+      selectedTemplateId.value = templatesList.value[0].id;
     }
-    if (!silent) {
-      MessagePlugin.success(`已加载 ${printers.length} 台打印机`);
-    }
-  } catch (e) {
-    qzConnected.value = false;
-    printerList.value = [];
-    selectedPrinter.value = '';
-    if (e?.code === 'QZ_NOT_RUNNING') {
-      MessagePlugin.warning('无法连接 QZ Tray，请确认已安装并启动');
-    } else if (!silent) {
-      MessagePlugin.error(e?.message || '连接 QZ Tray 失败');
-    }
-  } finally {
-    qzConnecting.value = false;
   }
 };
-
-watch(printAdapter, (val) => {
-  if (val.startsWith('qz') && showPrintModal.value) {
-    refreshQzPrinters({ silent: true });
-  }
-});
-
-watch(showPrintModal, (open) => {
-  if (open && printAdapter.value.startsWith('qz')) {
-    refreshQzPrinters({ silent: true });
-  }
-});
 
 // 打开打印弹窗
 const handleOpenPrintModal = () => {
@@ -144,11 +97,7 @@ const handleOpenPrintModal = () => {
     MessagePlugin.warning('请至少选择一个设备');
     return;
   }
-  if (templatesList.value.length > 0) {
-    if (!selectedTemplateId.value || !templatesList.value.some(t => t.id === selectedTemplateId.value)) {
-      selectedTemplateId.value = templatesList.value[0].id;
-    }
-  }
+  ensureTemplateSelected();
   showPrintModal.value = true;
 };
 
@@ -156,11 +105,7 @@ const handleOpenPrintModal = () => {
 const handleSinglePrint = (assetNum) => {
   loadTemplates();
   selectedDeviceIds.value = [assetNum];
-  if (templatesList.value.length > 0) {
-    if (!selectedTemplateId.value || !templatesList.value.some(t => t.id === selectedTemplateId.value)) {
-      selectedTemplateId.value = templatesList.value[0].id;
-    }
-  }
+  ensureTemplateSelected();
   showPrintModal.value = true;
 };
 
@@ -174,63 +119,6 @@ const handleRemoveFromPrint = (assetNum) => {
     showPrintModal.value = false;
     MessagePlugin.info('已清空打印列表');
   }
-};
-
-// 确认打印
-const handleConfirmPrint = async () => {
-  const tpl = selectedTemplate.value;
-  if (!tpl) {
-    MessagePlugin.warning('请先选择标签模板');
-    return;
-  }
-  if (!selectedDevices.value.length) {
-    MessagePlugin.warning('请至少选择一个设备');
-    return;
-  }
-  if (printAdapter.value.startsWith('qz') && !selectedPrinter.value) {
-    MessagePlugin.warning('请先选择打印机，或点击刷新连接 QZ Tray');
-    return;
-  }
-
-  printing.value = true;
-  try {
-    const jobs = selectedDevices.value.map((device) => ({
-      template: tpl,
-      variables: device
-    }));
-    const count = await printLabelJobs(jobs, {
-      adapter: printAdapter.value,
-      printer: selectedPrinter.value
-    });
-    if (printAdapter.value.startsWith('qz')) {
-      MessagePlugin.success(`已通过 QZ Tray 发送 ${count} 张标签到「${selectedPrinter.value}」`);
-    } else {
-      MessagePlugin.success(`已打开打印对话框，共 ${count} 张标签`);
-    }
-    showPrintModal.value = false;
-  } catch (e) {
-    if (e?.code === 'POPUP_BLOCKED') {
-      MessagePlugin.warning('打印窗口被浏览器拦截，请允许本站点弹窗后重试');
-    } else if (e?.code === 'QZ_NOT_RUNNING') {
-      MessagePlugin.warning('无法连接 QZ Tray，请确认已安装并启动');
-    } else if (e?.code === 'QZ_NO_PRINTER') {
-      MessagePlugin.warning('未找到可用打印机，请选择打印机后重试');
-    } else if (e?.code === 'QZ_PRINT_FAILED' || e?.code === 'QZ_CONNECT_FAILED') {
-      MessagePlugin.error(e.message || 'QZ 打印失败');
-    } else {
-      console.error(e);
-      MessagePlugin.error(e?.message || '打印失败，请查看控制台');
-    }
-  } finally {
-    printing.value = false;
-  }
-};
-
-const PREVIEW_WIDTH = 240;
-
-// 动态计算缩放参数
-const getPreviewScale = (tplWidth) => {
-  return PREVIEW_WIDTH / (tplWidth || 250);
 };
 
 onMounted(() => {
@@ -351,153 +239,15 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- 弹窗：标签打印与预览 -->
-    <t-dialog
+    <LabelPrintDialog
       v-model:visible="showPrintModal"
+      v-model:selected-template-id="selectedTemplateId"
       header="设备标签打印"
-      width="980px"
-      :footer="false"
-      destroy-on-close
-    >
-      <div class="print-dialog-wrapper" v-if="selectedTemplate">
-        <!-- 弹窗顶部：模板选择 & 统计栏 -->
-        <div class="dialog-top-bar">
-          <div class="template-selector-group">
-            <span class="label-title">选择标签模板：</span>
-            <t-select
-              v-model="selectedTemplateId"
-              placeholder="请选择标签模板"
-              style="width: 260px;"
-            >
-              <t-option
-                v-for="tpl in templatesList"
-                :key="tpl.id"
-                :value="tpl.id"
-                :label="tpl.name"
-              />
-            </t-select>
-
-            <span class="template-size-badge">
-              物理尺寸: {{ Math.round(selectedTemplate.width / 5) }} × {{ Math.round(selectedTemplate.height / 5) }} mm
-            </span>
-          </div>
-
-          <div class="batch-count-info">
-            准备打印 <strong class="highlight">{{ selectedDevices.length }}</strong> 张标签
-          </div>
-        </div>
-
-        <!-- 弹窗中部：设备标签预览网格（一行至少2-3个，保真等比例模拟） -->
-        <div class="dialog-preview-grid">
-          <div
-            v-for="device in selectedDevices"
-            :key="device.asset_num"
-            class="label-card-item"
-          >
-            <!-- 卡片头部：设备名称与移除按钮 -->
-            <div class="card-header">
-              <div class="device-info">
-                <span class="code">{{ device.asset_num }}</span>
-                <span class="name" :title="device.asset_name">{{ device.asset_name }}</span>
-              </div>
-              <t-icon
-                name="close"
-                class="remove-icon"
-                title="从本次打印中移除"
-                @click="handleRemoveFromPrint(device.asset_num)"
-              />
-            </div>
-
-            <!-- 卡片主体：保真模拟实际宽高与布局 -->
-            <div class="card-body">
-              <div
-                class="scaled-preview-container"
-                :style="{
-                  width: `${PREVIEW_WIDTH}px`,
-                  height: `${Math.round(selectedTemplate.height * getPreviewScale(selectedTemplate.width))}px`
-                }"
-              >
-                <div
-                  class="scaled-preview-inner"
-                  :style="{
-                    width: `${selectedTemplate.width}px`,
-                    height: `${selectedTemplate.height}px`,
-                    transform: `scale(${getPreviewScale(selectedTemplate.width)})`,
-                    transformOrigin: 'top left'
-                  }"
-                >
-                  <DesignPreview
-                    :template="selectedTemplate"
-                    :variables="device"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 弹窗底部操作区 -->
-        <div class="dialog-footer">
-          <div class="footer-left">
-            <div class="footer-summary">
-              已关联模板【<strong>{{ selectedTemplate.name }}</strong>】，共计 {{ selectedDevices.length }} 张设备标签
-            </div>
-            <div class="print-options">
-              <span class="opt-label">打印方式</span>
-              <t-radio-group v-model="printAdapter" variant="default-filled" size="small">
-                <t-radio-button value="qz-html">QZ Tray HTML (推荐 A42)</t-radio-button>
-                <t-radio-button value="qz-image">QZ Tray 位图</t-radio-button>
-                <t-radio-button value="browser">浏览器原生</t-radio-button>
-              </t-radio-group>
-
-              <template v-if="printAdapter.startsWith('qz')">
-                <span
-                  class="qz-status"
-                  :class="{ ok: qzConnected, busy: qzConnecting }"
-                >{{ qzStatusText }}</span>
-                <t-select
-                  v-model="selectedPrinter"
-                  placeholder="选择打印机"
-                  filterable
-                  style="width: 220px;"
-                  :loading="qzConnecting"
-                  :options="printerList.map((name) => ({ label: name, value: name }))"
-                />
-                <t-button
-                  variant="outline"
-                  size="small"
-                  :loading="qzConnecting"
-                  @click="refreshQzPrinters()"
-                >
-                  刷新打印机
-                </t-button>
-              </template>
-            </div>
-
-            <t-alert v-if="printAdapter === 'qz-html'" theme="info" size="small" style="margin-top: 10px;">
-              <template #message>
-                <strong>💡 译维 A42 / 标签打印机排版提示：</strong><br />
-                1. 当前采用 <b>HTML 驱动渲染</b> 模式，精准进行矢量渲染与边界锁尺。<br />
-                2. <strong>关键步骤：</strong> 请在 Windows「控制面板 -> 设备和打印机 -> 译维 A42 打印首选项」中建立并选中与物理标签相符的规格（如 50×35mm），避免默认 A4 纸张高度导致连续走纸；<br />
-                3. 重新开机或换纸后，建议长按打印机进纸键完成缝隙/黑标学习。
-              </template>
-            </t-alert>
-          </div>
-          <div class="footer-btns">
-            <t-button variant="outline" @click="showPrintModal = false">取消</t-button>
-            <t-button
-              theme="primary"
-              size="medium"
-              :loading="printing"
-              @click="handleConfirmPrint"
-            >
-              <template #icon><t-icon name="print" /></template>
-              确认打印
-            </t-button>
-          </div>
-        </div>
-      </div>
-    </t-dialog>
+      :templates="templatesList"
+      :items="printDialogItems"
+      removable
+      @remove-item="handleRemoveFromPrint"
+    />
   </div>
 </template>
 
@@ -639,206 +389,6 @@ onMounted(() => {
       text-align: center;
       padding: 40px;
       color: #86909c;
-    }
-  }
-}
-
-// 打印设置与预览弹窗样式
-.print-dialog-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding-top: 4px;
-
-  .dialog-top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #f7f8fa;
-    padding: 12px 18px;
-    border-radius: 6px;
-
-    .template-selector-group {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-
-      .label-title {
-        font-size: 14px;
-        font-weight: 500;
-        color: #1d2129;
-      }
-
-      .template-size-badge {
-        font-size: 12px;
-        color: #4e5969;
-        background: #e5e6eb;
-        padding: 4px 8px;
-        border-radius: 4px;
-      }
-    }
-
-    .batch-count-info {
-      font-size: 14px;
-      color: #4e5969;
-
-      .highlight {
-        color: #0052d9;
-        font-size: 16px;
-      }
-    }
-  }
-
-  // 多列网格（一行至少2-3个）
-  .dialog-preview-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-    gap: 16px;
-    max-height: 480px;
-    overflow-y: auto;
-    padding: 8px 4px;
-  }
-
-  .label-card-item {
-    background: white;
-    border: 1px solid #e5e6eb;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    transition: all 0.2s ease;
-
-    &:hover {
-      border-color: #0052d9;
-      box-shadow: 0 4px 12px rgba(0, 82, 217, 0.12);
-    }
-
-    .card-header {
-      padding: 10px 14px;
-      background: #fafbfc;
-      border-bottom: 1px solid #edf0f4;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-
-      .device-info {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        overflow: hidden;
-
-        .code {
-          font-family: monospace;
-          font-size: 12px;
-          color: #0052d9;
-          font-weight: 600;
-          background: #e8f3ff;
-          padding: 2px 6px;
-          border-radius: 4px;
-        }
-
-        .name {
-          font-size: 13px;
-          color: #1d2129;
-          font-weight: 500;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 140px;
-        }
-      }
-
-      .remove-icon {
-        cursor: pointer;
-        color: #86909c;
-        font-size: 14px;
-        transition: color 0.15s;
-
-        &:hover {
-          color: #f53f3f;
-        }
-      }
-    }
-
-    .card-body {
-      padding: 12px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-color: #f2f3f5;
-    }
-
-    // 保真等比例模拟框
-    .scaled-preview-container {
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      border-radius: 4px;
-      background: white;
-    }
-
-    .scaled-preview-inner {
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-  }
-
-  .dialog-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: 16px;
-    border-top: 1px solid #edf0f4;
-    padding-top: 14px;
-
-    .footer-left {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .footer-summary {
-      font-size: 13px;
-      color: #4e5969;
-
-      strong {
-        color: #1d2129;
-      }
-    }
-
-    .print-options {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 10px;
-
-      .opt-label {
-        font-size: 13px;
-        color: #4e5969;
-      }
-
-      .qz-status {
-        font-size: 12px;
-        color: #f53f3f;
-
-        &.ok {
-          color: #00a870;
-        }
-
-        &.busy {
-          color: #e37318;
-        }
-      }
-    }
-
-    .footer-btns {
-      display: flex;
-      gap: 12px;
-      flex-shrink: 0;
     }
   }
 }

@@ -1,14 +1,13 @@
 <script setup>
-import { onMounted, onUnmounted, watch, ref } from 'vue';
+import { onMounted, onUnmounted, watch, ref, computed } from 'vue';
 import HeaderNav from './layout/HeaderNav.vue';
 import LeftMenu from './layout/LeftMenu.vue';
 import RightMenu from './layout/RightMenu.vue';
 import Board from './layout/Board.vue';
+import LabelPrintDialog from '@/components/LabelPrintDialog.vue';
 import { state, actions } from './store/designerState.js';
 import { on, off } from '@/utils/dom.js';
-import { printLabelJobs } from '@/utils/printService.js';
 import { SAMPLE_PRINT_VARIABLES } from '@/utils/templateStore.js';
-import { MessagePlugin } from 'tdesign-vue-next';
 
 const props = defineProps({
   modelValue: {
@@ -45,7 +44,22 @@ const emit = defineEmits(['update:modelValue', 'save', 'print']);
 const _isSyncingFromParent = ref(false);
 /** 卸载时 clearStoreList 会触发 storeList watch，绝不能把 data:[] 写回父级模板 */
 const _isUnmounting = ref(false);
-const printing = ref(false);
+const showPrintModal = ref(false);
+
+const currentTemplate = computed(() => ({
+  id: props.modelValue?.id,
+  name: props.modelValue?.name || '标签模板',
+  width: state.page.width,
+  height: state.page.height,
+  data: state.storeList
+}));
+
+const printPreviewItems = computed(() => [{
+  id: 'sample',
+  variables: SAMPLE_PRINT_VARIABLES,
+  title: SAMPLE_PRINT_VARIABLES.asset_num,
+  subtitle: SAMPLE_PRINT_VARIABLES.asset_name
+}]);
 
 let syncUnlockTimer = null;
 
@@ -104,31 +118,9 @@ const handleSave = (template) => {
   emit('save', template);
 };
 
-const handlePrint = async (template) => {
+const handlePrint = (template) => {
   emit('print', template);
-  if (printing.value) return;
-
-  printing.value = true;
-  try {
-    const tpl = {
-      id: props.modelValue?.id,
-      name: props.modelValue?.name || '标签模板',
-      width: state.page.width,
-      height: state.page.height,
-      data: state.storeList
-    };
-    await printLabelJobs([{ template: tpl, variables: SAMPLE_PRINT_VARIABLES }]);
-    MessagePlugin.success('已打开打印对话框（使用示例数据预览，正式打印请走设备打印页）');
-  } catch (e) {
-    if (e?.code === 'POPUP_BLOCKED') {
-      MessagePlugin.warning('打印窗口被浏览器拦截，请允许本站点弹窗后重试');
-    } else {
-      console.error(e);
-      MessagePlugin.error('打印失败，请查看控制台');
-    }
-  } finally {
-    printing.value = false;
-  }
+  showPrintModal.value = true;
 };
 
 const handleCancelCurrent = (e) => {
@@ -183,6 +175,13 @@ onUnmounted(() => {
       <Board />
       <RightMenu />
     </div>
+
+    <LabelPrintDialog
+      v-model:visible="showPrintModal"
+      header="标签打印预览"
+      :template="currentTemplate"
+      :items="printPreviewItems"
+    />
   </div>
 </template>
 
