@@ -75,7 +75,7 @@ export const state = reactive({
         bodyHeight: 40,
         fontSize: 14,
         displayValue: '1',
-        data: '${barcode_code}'
+        data: '$_{barcode_code}'
       }
     },
     xLine: {
@@ -126,7 +126,7 @@ export const state = reactive({
       variable: { enable: false, textData: [] },
       default: { width: '', height: '', x: '', y: '' },
       props: {
-        data: '${qr_code}',
+        data: '$_{qr_code}',
         options: { margin: 4, width: '', scale: 4, errorCorrectionLevel: 'H' }
       }
     },

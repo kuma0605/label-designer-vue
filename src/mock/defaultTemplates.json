@@ -4,7 +4,7 @@
     "name": "中医院模版 (80×60mm)",
     "width": 400,
     "height": 300,
-    "seedVersion": 5,
+    "seedVersion": 6,
     "data": [
       {
         "name": "customText",
@@ -129,23 +129,23 @@
           "tableData": [
             {
               "名称": "规格",
-              "${asset_num}": "S5130S-52S-E"
+              "$_{asset_num}": "S5130S-52S-E"
             },
             {
               "名称": "入库",
-              "${asset_num}": "2021-06-30"
+              "$_{asset_num}": "2021-06-30"
             },
             {
               "名称": "科室",
-              "${asset_num}": "信息科"
+              "$_{asset_num}": "信息科"
             },
             {
               "名称": "厂家",
-              "${asset_num}": "/"
+              "$_{asset_num}": "/"
             },
             {
               "名称": "编码",
-              "${asset_num}": "Z020240905005727"
+              "$_{asset_num}": "Z020240905005727"
             }
           ],
           "align": "left",
@@ -180,7 +180,7 @@
           "enable": true,
           "textData": [
             {
-              "value": "${qr_code}",
+              "value": "$_{qr_code}",
               "key": "qr_code",
               "indexes": [
                 0,
@@ -204,7 +204,7 @@
           "y": 120
         },
         "props": {
-          "data": "${qr_code}",
+          "data": "$_{qr_code}",
           "options": {
             "margin": 4,
             "width": "",

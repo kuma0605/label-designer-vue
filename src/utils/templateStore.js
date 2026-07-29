@@ -14,7 +14,7 @@ const SEED_TEMPLATE_IDS = new Set(['asset-tag-default', 'tpl_xqu324m9']);
  * 种子版本：默认模板 id 在 seedVersion 落后时一次性升级为最新种子。
  * 自定义模板（非 SEED_TEMPLATE_IDS）不会被覆盖。
  */
-export const SEED_VERSION = 5;
+export const SEED_VERSION = 6;
 
 /** 设计器打印预览用的示例变量（非真实设备） */
 export const SAMPLE_PRINT_VARIABLES = {

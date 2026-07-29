@@ -4,6 +4,7 @@ import { on, off } from '@/utils/dom';
 import { state, actions } from '../store/designerState.js';
 import Drag from './Drag.vue';
 import { throttle } from 'throttle-debounce';
+import { makeVarToken } from '@/utils/preview.js';
 
 const boardRef = ref(null);
 const dragRefs = ref([]);
@@ -118,7 +119,7 @@ const handleDrop = (e) => {
     };
 
     if (varKey) {
-      defaultProps.text = `${varLabel}：\${${varKey}}`;
+      defaultProps.text = `${varLabel}：${makeVarToken(varKey)}`;
     }
 
     actions.addComponent(componentId, defaultProps);

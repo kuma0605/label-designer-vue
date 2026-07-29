@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { replaceVars, toVariablesMap } from '@/utils/preview';
+import { replaceVars, toVariablesMap, formatVarValue } from '@/utils/preview';
 
 const props = defineProps({
   component: { type: Object, required: true },
@@ -17,7 +17,7 @@ const textStyle = computed(() => {
   };
 });
 
-// 渲染文本：将 ${key} 占位符替换为真实数据
+// 渲染文本：将 $_{key} 占位符替换为真实数据
 const renderedHtml = computed(() => {
   const { variable, props: cProps = {} } = props.component || {};
   const vars = toVariablesMap(props.variables);
@@ -31,12 +31,12 @@ const renderedHtml = computed(() => {
   ) {
     return variable.textData
       .map((item) => {
-        if (item.key && vars[item.key] !== undefined) {
-          // 有真实值 → 替换（转义防 XSS）
-          return `<span>${escapeHtml(String(vars[item.key]))}</span>`;
+        if (item.key) {
+          // 动态字段：无数据时显示 /
+          return `<span>${escapeHtml(formatVarValue(vars[item.key]))}</span>`;
         }
-        // 无真实值 → 显示占位符字面量
-        return `<span class="var-placeholder">${escapeHtml(item.value || '')}</span>`;
+        // 静态文字片段
+        return `<span>${escapeHtml(item.value || '')}</span>`;
       })
       .join('')
       .replace(/\n/g, '<br/>');

@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { on, off } from '@/utils/dom';
 import { actions, state } from '../store/designerState.js';
+import { makeVarToken } from '@/utils/preview.js';
 
 const MIN_COL_PERCENT = 8;
 
@@ -130,13 +131,13 @@ const onDragOverCell = (e) => {
   if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
 };
 
-/** 把左侧动态字段拖进单元格 / 表头，写入 ${key} */
+/** 把左侧动态字段拖进单元格 / 表头，写入 $_{key} */
 const onDropVariable = (e, { mode, key, rowIndex }) => {
   const varKey = e.dataTransfer?.getData('variableKey');
   if (!varKey) return;
   e.preventDefault();
   e.stopPropagation();
-  const token = `\${${varKey}}`;
+  const token = makeVarToken(varKey);
   if (mode === 'header') {
     actions.setTableColumnKey(key, token);
   } else {

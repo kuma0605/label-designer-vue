@@ -18,7 +18,7 @@ export default defineComponent({
       type: Object,
       required: true
     },
-    // 真实数据，用于替换模板中的 ${key} 占位符
+    // 真实数据，用于替换模板中的 $_{key} 占位符
     // 格式: { asset_num: 'ZC-001', asset_name: '联想笔记本', ... }
     variables: {
       type: [Object, Array],

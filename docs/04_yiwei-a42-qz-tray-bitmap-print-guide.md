@@ -15,7 +15,7 @@
 | 开发 | 手写指令，难预览 | 可视化拖拽，所见即所得 |
 | 兼容性 | 绑定品牌指令集 | 有 Windows 驱动即可 |
 | 排版 | 表格 / 二维码成本高 | CSS + 组件，JSON 模板 |
-| 维护 | 改指令 | 改模板 / `${变量}` |
+| 维护 | 改指令 | 改模板 / `$_{变量}` |
 
 ### 1.2 打印通道（设备打印页）
 
@@ -141,7 +141,7 @@ flowchart TD
 
 ### 陷阱 8：默认模板保存后又被种子盖回
 
-- **现象**：二维码 / 条码改成固定值并保存，再打开又变回 `${qr_code}`。
+- **现象**：二维码 / 条码改成固定值并保存，再打开又变回 `$_{qr_code}`。
 - **原因**：v-model 回写丢掉 `seedVersion`，加载时被当成旧种子整份覆盖。
 - **解法**：保存与同步保留 `seedVersion`；有内容仅缺版本时只补版本、不覆盖内容（见 `src/utils/templateStore.js`）。
 
@@ -166,7 +166,7 @@ flowchart TD
 | `src/utils/printService.js` | 渲染、PRINT_CSS、browser / qz-html / qz-image |
 | `src/utils/qzClient.js` | QZ 连接与证书钩子 |
 | `src/views/DevicePrintPage.vue` | 设备列表与打印方式切换 |
-| `docs/05_template-variables-and-device-print.md` | `${变量}` 与设备数据注入 |
+| `docs/05_template-variables-and-device-print.md` | `$_{变量}` 与设备数据注入 |
 | `public/certs/README.md` | 静默打印证书（本地放置，已 gitignore） |
 
 ---

@@ -32,7 +32,7 @@ const cellTextStyle = computed(() => ({
     : 'Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif'
 }));
 
-/** 原始列 key（可能含 ${var}），用于取数；展示用 label（已替换） */
+/** 原始列 key（可能含 $_{var}），用于取数；展示用 label（已替换） */
 const columns = computed(() => {
   const raw = props.component?.props?.tableData;
   if (!Array.isArray(raw) || !raw.length) return [];
@@ -49,7 +49,7 @@ const tableData = computed(() => {
   return raw.map((row) => {
     const next = {};
     Object.keys(row || {}).forEach((key) => {
-      // 单元格值与表头（列名）都支持 ${asset_num} 等占位符
+      // 单元格值与表头（列名）都支持 $_{asset_num} 等占位符
       next[key] = replaceVars(String(row[key] ?? ''), props.variables);
     });
     return next;

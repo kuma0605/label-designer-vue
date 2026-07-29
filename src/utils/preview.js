@@ -2,6 +2,21 @@ import barcode from 'jsbarcode';
 import QrCode from 'qrcode';
 
 /**
+ * 标签变量占位符：$_{key}
+ * 不用 ${key}，避免 Spring 等把 ${} 当属性占位符解析；也与宿主项目一致。
+ */
+export const VAR_TOKEN_PREFIX = '$_{';
+export const VAR_TOKEN_SUFFIX = '}';
+
+/** 生成占位符，如 asset_num → $_{asset_num} */
+export function makeVarToken(key) {
+  return `${VAR_TOKEN_PREFIX}${key}${VAR_TOKEN_SUFFIX}`;
+}
+
+/** 匹配 $_{key}；兼容历史 ${key} */
+const VAR_TOKEN_REG = /\$_\{\s*([^}]+?)\s*\}|\$\{\s*([^}]+?)\s*\}/g;
+
+/**
  * 将 variables 规范为 { key: value } 映射
  * 兼容设备对象，以及 [{ key, value/label }] 数组
  */
@@ -22,16 +37,31 @@ export function toVariablesMap(variables) {
   return variables;
 }
 
+/** 无匹配 / 空值时的占位显示 */
+export const EMPTY_VAR_DISPLAY = '/';
+
 /**
- * 替换文本中的 ${key} 占位符为真实数据
+ * 动态字段取值：无数据（undefined / null / ''）时显示 /
+ * @param {*} value
+ * @returns {string}
+ */
+export function formatVarValue(value) {
+  if (value === undefined || value === null || value === '') {
+    return EMPTY_VAR_DISPLAY;
+  }
+  return String(value);
+}
+
+/**
+ * 替换文本中的 $_{key}（及历史 ${key}）占位符为真实数据
+ * 无匹配或值为空时替换为 /
  * @param {string} text - 含占位符的文本
  * @param {object|array} variables - { key: value } 或字段数组
  * @returns {string} 替换后的文本
  */
 export function replaceVars(text, variables) {
   if (text == null || text === '') return '';
-  const map = toVariablesMap(variables);
-  if (!map || !Object.keys(map).length) return String(text);
+  const map = toVariablesMap(variables) || {};
 
   // 兼容全角 ＄｛｝ 与 key 两侧空格
   const normalized = String(text)
@@ -39,10 +69,10 @@ export function replaceVars(text, variables) {
     .replace(/\uFF5B/g, '{') // ｛
     .replace(/\uFF5D/g, '}'); // ｝
 
-  return normalized.replace(/\$\{\s*([^}]+?)\s*\}/g, (match, key) => {
-    const k = String(key).trim();
+  return normalized.replace(VAR_TOKEN_REG, (match, keyA, keyB) => {
+    const k = String(keyA || keyB || '').trim();
     if (!k) return match;
-    return map[k] !== undefined && map[k] !== null ? String(map[k]) : match;
+    return formatVarValue(map[k]);
   });
 }
 
