@@ -6,6 +6,8 @@ import {
   loadTemplatesFromStorage,
   saveTemplatesToStorage,
   setDefaultTemplate,
+  getDefaultTemplates,
+  normalizeTemplate,
   createId
 } from '@/utils/templateStore.js';
 
@@ -98,6 +100,27 @@ const handleCreate = () => {
   captureSnapshotAfterReady();
 };
 
+/** 将内置种子模板写入本地模版库（同名已存在则跳过） */
+const handleImportBuiltin = () => {
+  const seed = getDefaultTemplates()[0];
+  if (!seed) {
+    MessagePlugin.warning('未找到内置模板');
+    return;
+  }
+  const exists = templatesList.value.some((item) => item.name === seed.name);
+  if (exists) {
+    MessagePlugin.info(`「${seed.name}」已在模版库中，无需重复导入`);
+    return;
+  }
+  const imported = normalizeTemplate(structuredClone(seed));
+  if (templatesList.value.some((item) => item.id === imported.id)) {
+    imported.id = createId('tpl');
+  }
+  templatesList.value = [imported, ...templatesList.value];
+  saveToLocal();
+  MessagePlugin.success(`已导入「${seed.name}」`);
+};
+
 const handleDelete = (id, e) => {
   e.stopPropagation();
   const confirm = DialogPlugin.confirm({
@@ -184,10 +207,16 @@ onMounted(() => {
           <t-icon name="dashboard" size="24px" style="color: #0052d9;" />
           <h2>商品标签设计器模板管理库</h2>
         </div>
-        <t-button theme="primary" size="large" @click="handleCreate">
-          <template #icon><t-icon name="add" /></template>
-          创建全新标签模板
-        </t-button>
+        <div class="header-actions">
+          <t-button variant="outline" size="large" @click="handleImportBuiltin">
+            <template #icon><t-icon name="file-import" /></template>
+            导入内置模板
+          </t-button>
+          <t-button theme="primary" size="large" @click="handleCreate">
+            <template #icon><t-icon name="add" /></template>
+            创建全新标签模板
+          </t-button>
+        </div>
       </div>
 
       <div class="templates-grid">
@@ -294,6 +323,12 @@ onMounted(() => {
         font-size: 20px;
         color: #333;
       }
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
   }
 
